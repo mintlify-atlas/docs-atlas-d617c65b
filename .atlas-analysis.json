@@ -1,0 +1,79 @@
+{
+  "projectType": "frontend",
+  "projectName": "Maymoun's Portfolio",
+  "projectDescription": "A modern Next.js portfolio and blog website built with TypeScript, Tailwind CSS, and Contentlayer for MDX content.",
+  "theme": "mint",
+  "primaryColor": "#040404",
+  "lightColor": "#34cee5",
+  "darkColor": "#58e0f4",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "Project Structure",
+        "pages": [
+          "structure/overview",
+          "structure/components",
+          "structure/layouts",
+          "structure/content"
+        ]
+      },
+      {
+        "group": "Features",
+        "pages": [
+          "features/blog-system",
+          "features/theming",
+          "features/search",
+          "features/newsletter",
+          "features/comments"
+        ]
+      },
+      {
+        "group": "Customization",
+        "pages": [
+          "customization/configuration",
+          "customization/styling",
+          "customization/content-management"
+        ]
+      },
+      {
+        "group": "Deployment",
+        "pages": [
+          "deployment/build",
+          "deployment/vercel"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "MDX-based blog with Contentlayer",
+    "Dark/light theme support",
+    "Tag-based post categorization",
+    "Integrated search with kbar",
+    "Newsletter subscription (Buttondown)",
+    "Comments system (Giscus)",
+    "SEO optimized",
+    "Responsive design with Tailwind CSS"
+  ],
+  "publicApiSurface": [
+    "Main - Homepage component",
+    "Blog - Blog post type definition",
+    "Authors - Author profile type",
+    "Card - Reusable card component",
+    "Header - Navigation header",
+    "Footer - Site footer",
+    "ThemeSwitch - Dark/light mode toggle",
+    "SearchButton - kbar search integration",
+    "Tag - Tag display component",
+    "MDXComponents - Custom MDX components",
+    "PostLayout - Blog post layout",
+    "ListLayout - Blog list layout",
+    "AuthorLayout - Author profile layout"
+  ]
+}
