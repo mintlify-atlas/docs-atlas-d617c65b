@@ -1,0 +1,415 @@
+---
+title: 'Newsletter Integration'
+description: 'Learn how the Buttondown newsletter integration works'
+icon: 'envelope'
+---
+
+## Overview
+
+The portfolio integrates with **Buttondown** for newsletter subscriptions, allowing visitors to subscribe to your blog updates via email.
+
+<Info>
+Buttondown is a minimal, elegant newsletter platform with a simple API and powerful features.
+</Info>
+
+## Newsletter Configuration
+
+Newsletter settings are configured in `data/siteMetadata.js`:
+
+```javascript data/siteMetadata.js
+const siteMetadata = {
+  title: 'Tech Blog',
+  author: 'EL-FAHIM Maymoun',
+  email: 'elfahim.maymoun99@gmail.com',
+  // ...
+  newsletter: {
+    // supports mailchimp, buttondown, convertkit, klaviyo, revue, emailoctopus
+    provider: 'buttondown',
+  },
+}
+
+module.exports = siteMetadata
+```
+
+### Supported Providers
+
+<CardGroup cols={3}>
+  <Card title="Buttondown" icon="b">
+    Minimal newsletter platform (default)
+  </Card>
+  <Card title="Mailchimp" icon="mailchimp">
+    Popular email marketing service
+  </Card>
+  <Card title="ConvertKit" icon="c">
+    Creator-focused email platform
+  </Card>
+  <Card title="Klaviyo" icon="k">
+    E-commerce email marketing
+  </Card>
+  <Card title="EmailOctopus" icon="envelope">
+    Affordable email campaigns
+  </Card>
+  <Card title="Revue" icon="r">
+    Newsletter platform (deprecated)
+  </Card>
+</CardGroup>
+
+## API Route Implementation
+
+The newsletter API route is implemented in `app/api/newsletter/route.ts`:
+
+```typescript app/api/newsletter/route.ts
+import { NewsletterAPI } from 'pliny/newsletter'
+import siteMetadata from '@/data/siteMetadata'
+
+const handler = NewsletterAPI({
+  // @ts-ignore
+  provider: siteMetadata.newsletter.provider,
+})
+
+export { handler as GET, handler as POST }
+```
+
+### How It Works
+
+<Steps>
+  <Step title="Import Pliny API">
+    Uses the `NewsletterAPI` from the Pliny library, which provides ready-made handlers
+  </Step>
+  
+  <Step title="Provider Configuration">
+    Automatically configures the API based on the provider specified in siteMetadata
+  </Step>
+  
+  <Step title="Export Handlers">
+    Exports both GET and POST handlers for the Next.js App Router API route
+  </Step>
+</Steps>
+
+<Note>
+The API route is automatically available at `/api/newsletter` and handles subscription requests.
+</Note>
+
+## Environment Variables
+
+To enable newsletter functionality, add your Buttondown API key to `.env.local`:
+
+```bash .env.local
+BUTTONDOWN_API_KEY=your_buttondown_api_key
+```
+
+### Getting Your API Key
+
+<Steps>
+  <Step title="Create Account">
+    Sign up for a free account at [buttondown.email](https://buttondown.email)
+  </Step>
+  
+  <Step title="Navigate to Settings">
+    Go to Settings → Programming in your Buttondown dashboard
+  </Step>
+  
+  <Step title="Copy API Key">
+    Copy your API key and add it to your `.env.local` file
+  </Step>
+  
+  <Step title="Restart Server">
+    Restart your development server to load the new environment variable
+  </Step>
+</Steps>
+
+## Newsletter Component Usage
+
+The newsletter subscription form is typically added to blog layouts or the homepage:
+
+```tsx
+import NewsletterForm from '@/components/NewsletterForm'
+
+export default function BlogLayout() {
+  return (
+    <div>
+      <article>
+        {/* Blog content */}
+      </article>
+      
+      {/* Newsletter signup */}
+      <NewsletterForm />
+    </div>
+  )
+}
+```
+
+## API Endpoints
+
+### Subscribe a User
+
+**POST** `/api/newsletter`
+
+```typescript
+fetch('/api/newsletter', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    email: 'user@example.com',
+  }),
+})
+```
+
+#### Request Body
+
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+#### Success Response
+
+```json
+{
+  "message": "Success! You've been subscribed."
+}
+```
+
+#### Error Response
+
+```json
+{
+  "error": "Email is required"
+}
+```
+
+<Warning>
+Make sure to validate email addresses on the client side before sending to the API to improve user experience.
+</Warning>
+
+## Switching Providers
+
+To use a different newsletter provider:
+
+<Tabs>
+  <Tab title="Mailchimp">
+    ```javascript data/siteMetadata.js
+    newsletter: {
+      provider: 'mailchimp',
+    }
+    ```
+    
+    Add to `.env.local`:
+    ```bash
+    MAILCHIMP_API_KEY=your_api_key
+    MAILCHIMP_API_SERVER=us1
+    MAILCHIMP_AUDIENCE_ID=your_audience_id
+    ```
+  </Tab>
+  
+  <Tab title="ConvertKit">
+    ```javascript data/siteMetadata.js
+    newsletter: {
+      provider: 'convertkit',
+    }
+    ```
+    
+    Add to `.env.local`:
+    ```bash
+    CONVERTKIT_API_KEY=your_api_key
+    CONVERTKIT_FORM_ID=your_form_id
+    ```
+  </Tab>
+  
+  <Tab title="Klaviyo">
+    ```javascript data/siteMetadata.js
+    newsletter: {
+      provider: 'klaviyo',
+    }
+    ```
+    
+    Add to `.env.local`:
+    ```bash
+    KLAVIYO_API_KEY=your_api_key
+    KLAVIYO_LIST_ID=your_list_id
+    ```
+  </Tab>
+  
+  <Tab title="EmailOctopus">
+    ```javascript data/siteMetadata.js
+    newsletter: {
+      provider: 'emailoctopus',
+    }
+    ```
+    
+    Add to `.env.local`:
+    ```bash
+    EMAILOCTOPUS_API_KEY=your_api_key
+    EMAILOCTOPUS_LIST_ID=your_list_id
+    ```
+  </Tab>
+</Tabs>
+
+## Newsletter Form Component
+
+Here's an example newsletter form component implementation:
+
+```tsx components/NewsletterForm.tsx
+'use client'
+
+import { useState } from 'react'
+
+export default function NewsletterForm() {
+  const [email, setEmail] = useState('')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [message, setMessage] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('loading')
+
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await res.json()
+
+      if (res.ok) {
+        setStatus('success')
+        setMessage(data.message || 'Successfully subscribed!')
+        setEmail('')
+      } else {
+        setStatus('error')
+        setMessage(data.error || 'Something went wrong')
+      }
+    } catch (error) {
+      setStatus('error')
+      setMessage('Failed to subscribe. Please try again.')
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-gray-200 p-6 dark:border-gray-800">
+      <h3 className="text-2xl font-bold">Subscribe to the newsletter</h3>
+      <p className="mt-2 text-gray-600 dark:text-gray-400">
+        Get the latest posts delivered right to your inbox
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-4">
+        <div className="flex gap-2">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your@email.com"
+            required
+            className="flex-1 rounded-md border border-gray-300 px-4 py-2 dark:border-gray-700 dark:bg-gray-900"
+          />
+          <button
+            type="submit"
+            disabled={status === 'loading'}
+            className="rounded-md bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {status === 'loading' ? 'Subscribing...' : 'Subscribe'}
+          </button>
+        </div>
+
+        {status === 'success' && (
+          <p className="mt-2 text-green-600 dark:text-green-400">{message}</p>
+        )}
+        {status === 'error' && (
+          <p className="mt-2 text-red-600 dark:text-red-400">{message}</p>
+        )}
+      </form>
+    </div>
+  )
+}
+```
+
+### Component Features
+
+<Steps>
+  <Step title="Email Input">
+    Validates email format with HTML5 validation
+  </Step>
+  
+  <Step title="Loading State">
+    Disables button and shows loading text during submission
+  </Step>
+  
+  <Step title="Success Feedback">
+    Shows success message and clears the input
+  </Step>
+  
+  <Step title="Error Handling">
+    Displays error messages for failed subscriptions
+  </Step>
+</Steps>
+
+## Privacy Considerations
+
+<CardGroup cols={2}>
+  <Card title="Double Opt-In" icon="shield-check">
+    Buttondown sends a confirmation email before subscribing users
+  </Card>
+  <Card title="GDPR Compliant" icon="scale-balanced">
+    Includes unsubscribe links in every email automatically
+  </Card>
+  <Card title="No Tracking" icon="eye-slash">
+    Minimal tracking and analytics
+  </Card>
+  <Card title="Data Ownership" icon="user-lock">
+    You own all subscriber data and can export it anytime
+  </Card>
+</CardGroup>
+
+<Info>
+Add a privacy policy link near the newsletter form to inform users how their data will be used.
+</Info>
+
+## Testing the Integration
+
+<Steps>
+  <Step title="Start Development Server">
+    ```bash
+    npm run dev
+    ```
+  </Step>
+  
+  <Step title="Navigate to Newsletter Form">
+    Go to the page containing the newsletter form
+  </Step>
+  
+  <Step title="Subscribe with Test Email">
+    Enter a test email address and submit
+  </Step>
+  
+  <Step title="Check Buttondown Dashboard">
+    Verify the subscriber appears in your Buttondown dashboard
+  </Step>
+  
+  <Step title="Confirm Email">
+    Check the test email inbox for the confirmation email
+  </Step>
+</Steps>
+
+<Warning>
+Never commit your API keys to version control. Always use environment variables and add `.env.local` to your `.gitignore`.
+</Warning>
+
+## Sending Newsletters
+
+Once you have subscribers:
+
+1. Log in to your Buttondown dashboard
+2. Click "Compose" to create a new email
+3. Write your newsletter content
+4. Preview and test the email
+5. Schedule or send immediately to all subscribers
+
+Buttondown automatically includes:
+- Unsubscribe links
+- Professional email templates
+- Mobile-responsive design
+- Analytics and open tracking

@@ -1,0 +1,674 @@
+---
+title: 'Content Management'
+description: 'Create and manage blog posts, author profiles, and media assets'
+---
+
+## Overview
+
+Maymoun's Portfolio uses Contentlayer to manage MDX content. All content is stored in the `data/` directory and is type-safe, with automatic validation and processing.
+
+## Content Structure
+
+The portfolio organizes content in two main categories:
+
+```
+data/
+├── blog/           # Blog posts (MDX)
+│   └── *.mdx
+├── authors/        # Author profiles (MDX)
+│   └── *.mdx
+└── siteMetadata.js # Site configuration
+```
+
+## Creating Blog Posts
+
+Blog posts are MDX files stored in `data/blog/` with YAML frontmatter.
+
+### Basic Blog Post Structure
+
+<Steps>
+  <Step title="Create MDX File">
+    Create a new file in `data/blog/` with a descriptive name:
+
+    ```bash
+    data/blog/meet-kafka.mdx
+    data/blog/introduction-to-docker.mdx
+    data/blog/my-first-post.mdx
+    ```
+
+    <Note>
+      The filename will be used as the URL slug: `your-site.com/blog/meet-kafka`
+    </Note>
+  </Step>
+
+  <Step title="Add Frontmatter">
+    Start your file with YAML frontmatter containing metadata:
+
+    ```mdx data/blog/meet-kafka.mdx
+    ---
+    title: 'Meet Kafka'
+    date: '2024-03-02'
+    lastmod: '2024-03-02'
+    tags: ['kafka', 'book', 'DevOps', 'data']
+    draft: false
+    summary: 'Apache Kafka is a distributed event store and stream-processing platform...'
+    images: ['/static/images/kafka.jpg']
+    authors: ['default']
+    layout: 'PostLayout'
+    canonicalUrl: ''
+    bibliography: ''
+    ---
+    ```
+  </Step>
+
+  <Step title="Write Content">
+    Add your content below the frontmatter using MDX:
+
+    ```mdx
+    ## Introduction
+
+    Every enterprise is powered by data...
+
+    ## Publish/Subscribe Messaging
+
+    ![Publish Subscribe Messaging](/static/images/pub_sub.png)
+
+    Publish/subscribe (pub/sub) messaging is a pattern...
+    ```
+  </Step>
+</Steps>
+
+### Frontmatter Fields
+
+All available frontmatter fields for blog posts:
+
+<Accordion title="Required Fields">
+  ```yaml
+  title: 'Your Post Title'        # Post title (required)
+  date: '2024-03-02'              # Publication date (required)
+  ```
+
+  These fields are mandatory for every blog post.
+</Accordion>
+
+<Accordion title="Optional Metadata">
+  ```yaml
+  lastmod: '2024-03-02'           # Last modification date
+  draft: false                     # Draft status (true hides post)
+  summary: 'Post summary...'       # SEO description and preview text
+  canonicalUrl: ''                 # Canonical URL for SEO
+  ```
+
+  - `draft: true` - Post won't appear in production builds
+  - `lastmod` - Updates the "last modified" date
+  - `summary` - Used in post previews and meta descriptions
+</Accordion>
+
+<Accordion title="Categorization">
+  ```yaml
+  tags: ['kafka', 'devops', 'data']  # Post tags/categories
+  ```
+
+  Tags are used for:
+  - Post categorization
+  - Tag pages (`/tags/kafka`)
+  - Related post suggestions
+  - Search indexing
+</Accordion>
+
+<Accordion title="Visual Content">
+  ```yaml
+  images: ['/static/images/kafka.jpg']  # Social share images
+  ```
+
+  The first image is used as:
+  - OpenGraph image for social sharing
+  - Twitter card image
+  - Post thumbnail (if layout supports it)
+</Accordion>
+
+<Accordion title="Authorship">
+  ```yaml
+  authors: ['default', 'sparrowhawk']  # Author IDs
+  ```
+
+  References author files in `data/authors/`. Multiple authors are supported.
+</Accordion>
+
+<Accordion title="Layout & Bibliography">
+  ```yaml
+  layout: 'PostLayout'     # Layout component to use
+  bibliography: ''         # Path to bibliography file for citations
+  ```
+
+  - `layout` - Custom layout component (defaults to `PostLayout`)
+  - `bibliography` - For academic posts with citations
+</Accordion>
+
+### Complete Blog Post Example
+
+Here's a real example from the portfolio:
+
+```mdx data/blog/meet-kafka.mdx
+---
+title: 'Meet Kafka'
+date: '2024-03-02'
+lastmod: '2024-03-02'
+tags: ['kafka', 'book', 'DevOps', 'data']
+draft: false
+summary: 'Apache Kafka is a distributed event store and stream-processing platform. It is an open-source system developed by the Apache Software Foundation written in Java and Scala.'
+images: ['/static/images/kafka.jpg']
+---
+
+## Introduction
+
+Every enterprise is powered by data. We take information in, analyze it, manipulate it, and create more as output. Every application creates data, whether it is log messages, metrics, user activity, outgoing messages, or something else.
+
+<TOCInline toc={props.toc} exclude="Introduction" />
+
+## Publish/Subscribe Messaging
+
+![Publish Subscribe Messaging](/static/images/pub_sub.png)
+
+Publish/subscribe (pub/sub) messaging is a pattern that is characterized by the sender (publisher) of a piece of data (message) not specifically directing it to a receiver.
+
+## Messages and Batches
+
+The unit of data within Kafka is called a message, similar to a row or record in a database environment. A message is simply an array of bytes as far as Kafka is concerned.
+
+## Conclusion
+
+I hope you enjoy the new features and improvements. If you have any feedback or suggestions, feel free to open an issue or reach out to me on [Twitter](https://twitter.com/Amalou88188197).
+```
+
+## MDX Features
+
+MDX allows you to use React components in your Markdown content.
+
+### Built-in Components
+
+<Tabs>
+  <Tab title="Table of Contents">
+    Add an inline table of contents:
+
+    ```mdx
+    <TOCInline toc={props.toc} exclude="Introduction" />
+    ```
+
+    This generates a table of contents from your headings, excluding specified sections.
+  </Tab>
+
+  <Tab title="Images">
+    Add images using standard Markdown or HTML:
+
+    ```mdx
+    ![Alt text](/static/images/kafka.jpg)
+
+    <!-- Or with HTML for more control -->
+    <img src="/static/images/kafka.jpg" alt="Kafka" width="600" />
+    ```
+
+    Images should be placed in `public/static/images/`.
+  </Tab>
+
+  <Tab title="Code Blocks">
+    Add syntax-highlighted code blocks:
+
+    ````mdx
+    ```javascript
+    const greeting = 'Hello, World!'
+    console.log(greeting)
+    ```
+
+    ```python title="app.py"
+    def greet(name):
+        return f"Hello, {name}!"
+    ```
+    ````
+
+    Add a title with the `title="filename"` attribute.
+  </Tab>
+
+  <Tab title="Links">
+    Add internal and external links:
+
+    ```mdx
+    [External link](https://example.com)
+    [Internal link](/blog/another-post)
+    [With title](https://example.com "Link title")
+    ```
+  </Tab>
+</Tabs>
+
+### Advanced MDX Features
+
+<Accordion title="Math Equations (KaTeX)">
+  Write mathematical equations using KaTeX:
+
+  ```mdx
+  Inline math: $E = mc^2$
+
+  Block math:
+  $$
+  \int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+  $$
+  ```
+</Accordion>
+
+<Accordion title="Footnotes">
+  Add footnotes to your posts:
+
+  ```mdx
+  Here's a sentence with a footnote[^1].
+
+  [^1]: This is the footnote content.
+  ```
+</Accordion>
+
+<Accordion title="Task Lists">
+  Create interactive task lists:
+
+  ```mdx
+  - [x] Completed task
+  - [ ] Incomplete task
+  - [ ] Another task
+  ```
+</Accordion>
+
+<Accordion title="Tables">
+  Add tables using GitHub-flavored Markdown:
+
+  ```mdx
+  | Feature | Supported |
+  |---------|----------|
+  | MDX | ✅ |
+  | TypeScript | ✅ |
+  | Dark Mode | ✅ |
+  ```
+</Accordion>
+
+## Author Profiles
+
+Author profiles are MDX files stored in `data/authors/` that define author information.
+
+### Creating an Author Profile
+
+<Steps>
+  <Step title="Create Author File">
+    Create a new MDX file in `data/authors/`:
+
+    ```bash
+    data/authors/default.mdx
+    data/authors/john-doe.mdx
+    ```
+
+    The filename becomes the author ID used in blog post frontmatter.
+  </Step>
+
+  <Step title="Add Author Frontmatter">
+    ```mdx data/authors/default.mdx
+    ---
+    name: EL-FAHIM Maymoun
+    avatar: /static/images/profile.jpg
+    occupation: Software Engineer & DevOps Enthusiast
+    company: kShuttle
+    email: elfahim.maymoun99@gmail.com
+    twitter: https://twitter.com/Amalou88188197
+    linkedin: https://www.linkedin.com/in/maymoun-elfahim/
+    github: https://github.com/Amalou99
+    layout: AuthorLayout
+    ---
+    ```
+  </Step>
+
+  <Step title="Add Author Bio">
+    Write the author's biography below the frontmatter:
+
+    ```mdx
+    ---
+    name: EL-FAHIM Maymoun
+    # ... other fields
+    ---
+
+    Passionate software engineer with a strong background in programming languages like Java. Interested in DevOps technologies like Docker, Jenkins and Kafka.
+
+    Currently, I am working as a Software Engineer at kShuttle where I am helping to build tracking the commitments solution of BPI France's clients.
+
+    When I am not coding you can find me playing football (Visca Barca!), having fun with friends or listening to some Tamazight music.
+    ```
+  </Step>
+</Steps>
+
+### Author Frontmatter Fields
+
+<ParamField path="name" type="string" required>
+  Author's full name
+</ParamField>
+
+<ParamField path="avatar" type="string">
+  Path to avatar image (e.g., `/static/images/profile.jpg`)
+</ParamField>
+
+<ParamField path="occupation" type="string">
+  Job title or occupation
+</ParamField>
+
+<ParamField path="company" type="string">
+  Company or organization name
+</ParamField>
+
+<ParamField path="email" type="string">
+  Email address
+</ParamField>
+
+<ParamField path="twitter" type="string">
+  Twitter profile URL
+</ParamField>
+
+<ParamField path="linkedin" type="string">
+  LinkedIn profile URL
+</ParamField>
+
+<ParamField path="github" type="string">
+  GitHub profile URL
+</ParamField>
+
+<ParamField path="layout" type="string">
+  Layout component (defaults to `AuthorLayout`)
+</ParamField>
+
+### Complete Author Example
+
+```mdx data/authors/default.mdx
+---
+name: EL-FAHIM Maymoun
+avatar: /static/images/profile.jpg
+occupation: Software Engineer & DevOps Enthusiast
+company: kShuttle
+email: elfahim.maymoun99@gmail.com
+twitter: https://twitter.com/Amalou88188197
+linkedin: https://www.linkedin.com/in/maymoun-elfahim/
+github: https://github.com/Amalou99
+---
+
+Passionate software engineer with a strong background in programming languages like Java. Interested in DevOps technologies like Docker, Jenkins and Kafka.
+
+Currently, I am working as a Software Engineer at kShuttle where I am helping to build tracking the commitments solution of BPI France's clients.
+
+I'm very dedicated to learn new things and firmly believe that learning should never cease. I enjoy creating different things by writing technical articles.
+
+When I am not coding you can find me playing football (Visca Barca and MESSI is the best ever), having fun with friends or listening to some Tamazight music (Rouicha is the Best).
+```
+
+## Managing Images and Assets
+
+All static assets are stored in the `public/` directory.
+
+### Directory Structure
+
+```
+public/
+└── static/
+    ├── images/          # Blog images and author avatars
+    │   ├── kafka.jpg
+    │   ├── profile.jpg
+    │   └── pub_sub.png
+    ├── favicons/        # Favicon files
+    └── fonts/           # Custom fonts (if any)
+```
+
+### Adding Images
+
+<Steps>
+  <Step title="Place Image File">
+    Add your image to `public/static/images/`:
+
+    ```bash
+    public/static/images/my-awesome-image.jpg
+    ```
+  </Step>
+
+  <Step title="Reference in MDX">
+    Use the path starting from `/static/`:
+
+    ```mdx
+    ![Description](/static/images/my-awesome-image.jpg)
+    ```
+  </Step>
+
+  <Step title="Use in Frontmatter">
+    Reference in blog post or author frontmatter:
+
+    ```yaml
+    images: ['/static/images/my-awesome-image.jpg']
+    avatar: /static/images/profile.jpg
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  **Image Optimization**: Next.js automatically optimizes images. For best results:
+  - Use `.jpg` for photos
+  - Use `.png` for graphics with transparency
+  - Use `.webp` for modern browsers (fallback handled automatically)
+  - Keep images under 1MB when possible
+</Note>
+
+## Tag Management
+
+Tags are automatically managed by Contentlayer and generate tag pages.
+
+### How Tags Work
+
+<Steps>
+  <Step title="Add Tags to Posts">
+    Add tags in your blog post frontmatter:
+
+    ```yaml
+    tags: ['kafka', 'devops', 'data-engineering']
+    ```
+  </Step>
+
+  <Step title="Automatic Tag Pages">
+    Tags are automatically:
+    - Counted and indexed
+    - Converted to URL-safe slugs
+    - Generated as tag pages (`/tags/kafka`)
+    - Added to the search index
+  </Step>
+
+  <Step title="Tag Count Generation">
+    The build process generates `app/tag-data.json` with tag counts:
+
+    ```json
+    {
+      "kafka": 3,
+      "devops": 5,
+      "data-engineering": 2
+    }
+    ```
+
+    This is used to display post counts on tag pages.
+  </Step>
+</Steps>
+
+### Tag Naming Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Lowercase" icon="a">
+    ```yaml
+    tags: ['javascript', 'react']
+    # Not: ['JavaScript', 'React']
+    ```
+  </Card>
+
+  <Card title="Use Hyphens" icon="minus">
+    ```yaml
+    tags: ['data-engineering', 'web-development']
+    # Not: ['data engineering', 'web_development']
+    ```
+  </Card>
+
+  <Card title="Be Specific" icon="bullseye">
+    ```yaml
+    tags: ['react-hooks', 'nextjs-13']
+    # Not: ['programming', 'coding']
+    ```
+  </Card>
+
+  <Card title="Stay Consistent" icon="check">
+    ```yaml
+    tags: ['typescript']
+    # Use the same tag across posts
+    # Not: ['typescript', 'ts', 'TypeScript']
+    ```
+  </Card>
+</CardGroup>
+
+## Contentlayer Configuration
+
+Contentlayer is configured in `contentlayer.config.ts` and provides:
+
+- Type-safe content with TypeScript
+- Automatic validation
+- MDX processing with remark/rehype plugins
+- Search index generation
+- Tag counting
+
+### Document Types
+
+<Accordion title="Blog Document Type">
+  ```typescript
+  export const Blog = defineDocumentType(() => ({
+    name: 'Blog',
+    filePathPattern: 'blog/**/*.mdx',
+    contentType: 'mdx',
+    fields: {
+      title: { type: 'string', required: true },
+      date: { type: 'date', required: true },
+      tags: { type: 'list', of: { type: 'string' }, default: [] },
+      lastmod: { type: 'date' },
+      draft: { type: 'boolean' },
+      summary: { type: 'string' },
+      images: { type: 'json' },
+      authors: { type: 'list', of: { type: 'string' } },
+      layout: { type: 'string' },
+      bibliography: { type: 'string' },
+      canonicalUrl: { type: 'string' },
+    },
+  }))
+  ```
+</Accordion>
+
+<Accordion title="Authors Document Type">
+  ```typescript
+  export const Authors = defineDocumentType(() => ({
+    name: 'Authors',
+    filePathPattern: 'authors/**/*.mdx',
+    contentType: 'mdx',
+    fields: {
+      name: { type: 'string', required: true },
+      avatar: { type: 'string' },
+      occupation: { type: 'string' },
+      company: { type: 'string' },
+      email: { type: 'string' },
+      twitter: { type: 'string' },
+      linkedin: { type: 'string' },
+      github: { type: 'string' },
+      layout: { type: 'string' },
+    },
+  }))
+  ```
+</Accordion>
+
+### Computed Fields
+
+Contentlayer automatically computes additional fields:
+
+- `readingTime` - Estimated reading time
+- `slug` - URL slug from filename
+- `path` - Full path to the content
+- `filePath` - Source file path
+- `toc` - Table of contents from headings
+- `structuredData` - JSON-LD for SEO
+
+## Content Workflow
+
+<Steps>
+  <Step title="Write Content">
+    Create your MDX file with frontmatter in `data/blog/` or `data/authors/`
+  </Step>
+
+  <Step title="Add Assets">
+    Place any images in `public/static/images/`
+  </Step>
+
+  <Step title="Preview Locally">
+    Run the development server:
+
+    ```bash
+    npm run dev
+    ```
+
+    Your content is available at `http://localhost:3000/blog/your-post`
+  </Step>
+
+  <Step title="Build and Deploy">
+    When ready, build for production:
+
+    ```bash
+    npm run build
+    ```
+
+    Contentlayer will:
+    - Validate all frontmatter
+    - Process MDX content
+    - Generate search index
+    - Count tags
+    - Create type definitions
+  </Step>
+</Steps>
+
+## Tips and Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Draft Mode" icon="file-pen">
+    Use `draft: true` while writing:
+
+    ```yaml
+    draft: true
+    ```
+
+    Drafts won't appear in production but are visible in development.
+  </Card>
+
+  <Card title="SEO Optimization" icon="magnifying-glass">
+    Always include:
+    - Descriptive `title`
+    - Compelling `summary`
+    - Relevant `tags`
+    - Social `images`
+  </Card>
+
+  <Card title="Reading Time" icon="clock">
+    Reading time is automatic. Aim for 5-15 minute posts (1,000-3,000 words).
+  </Card>
+
+  <Card title="Image Optimization" icon="image">
+    - Use descriptive filenames
+    - Add alt text to all images
+    - Compress images before uploading
+    - Use appropriate formats (JPG/PNG/WebP)
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/customization/configuration">
+    Configure site settings and integrations
+  </Card>
+  <Card title="Styling" icon="palette" href="/customization/styling">
+    Customize the visual design
+  </Card>
+</CardGroup>

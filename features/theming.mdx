@@ -1,0 +1,315 @@
+---
+title: 'Theming System'
+description: 'Learn how dark mode and theme switching works using next-themes'
+icon: 'moon'
+---
+
+## Overview
+
+The portfolio implements a theme switching system using **next-themes**, allowing users to toggle between light and dark modes with system preference support.
+
+<Info>
+next-themes provides zero-flash theme switching, automatic system theme detection, and persistent theme preferences.
+</Info>
+
+## Theme Provider Setup
+
+The theme system is initialized at the root layout level using the `ThemeProvider` component:
+
+```typescript app/theme-providers.tsx
+'use client'
+
+import { ThemeProvider } from 'next-themes'
+import siteMetadata from '@/data/siteMetadata'
+
+export function ThemeProviders({ children }: { children: React.ReactNode }) {
+  return (
+    <ThemeProvider attribute="class" defaultTheme={siteMetadata.theme} enableSystem>
+      {children}
+    </ThemeProvider>
+  )
+}
+```
+
+<Steps>
+  <Step title="attribute='class'">
+    Uses the `class` attribute strategy, adding/removing a `dark` class on the `<html>` element
+  </Step>
+  
+  <Step title="defaultTheme">
+    Defaults to the theme specified in `siteMetadata.theme` (typically `'system'`)
+  </Step>
+  
+  <Step title="enableSystem">
+    Enables automatic detection of system theme preferences
+  </Step>
+</Steps>
+
+## Root Layout Integration
+
+The `ThemeProviders` component wraps the entire application in `app/layout.tsx`:
+
+```typescript app/layout.tsx
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html
+      lang={siteMetadata.language}
+      className={`${space_grotesk.variable} scroll-smooth`}
+      suppressHydrationWarning
+    >
+      <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
+      <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
+      <body className="bg-white text-black antialiased dark:bg-gray-950 dark:text-white">
+        <ThemeProviders>
+          <Analytics analyticsConfig={siteMetadata.analytics as AnalyticsConfig} />
+          <SectionContainer>
+            <div className="flex h-screen flex-col justify-between font-sans">
+              <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
+                <Header />
+                <main className="mb-auto">{children}</main>
+              </SearchProvider>
+              <Footer />
+            </div>
+          </SectionContainer>
+        </ThemeProviders>
+      </body>
+    </html>
+  )
+}
+```
+
+<Note>
+The `suppressHydrationWarning` prop on `<html>` prevents warnings when the theme class is added before React hydration.
+</Note>
+
+## Theme Switch Component
+
+The `ThemeSwitch` component provides a button to toggle between light and dark modes:
+
+```typescript components/ThemeSwitch.tsx
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useTheme } from 'next-themes'
+
+const ThemeSwitch = () => {
+  const [mounted, setMounted] = useState(false)
+  const { theme, setTheme, resolvedTheme } = useTheme()
+
+  // When mounted on client, now we can show the UI
+  useEffect(() => setMounted(true), [])
+
+  if (!mounted) {
+    return null
+  }
+
+  return (
+    <button
+      aria-label="Toggle Dark Mode"
+      onClick={() => setTheme(theme === 'dark' || resolvedTheme === 'dark' ? 'light' : 'dark')}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+        className="h-6 w-6 text-gray-900 dark:text-gray-100"
+      >
+        {mounted && (theme === 'dark' || resolvedTheme === 'dark') ? (
+          <path
+            fillRule="evenodd"
+            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+            clipRule="evenodd"
+          />
+        ) : (
+          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+        )}
+      </svg>
+    </button>
+  )
+}
+
+export default ThemeSwitch
+```
+
+### Key Implementation Details
+
+<Steps>
+  <Step title="Client-Side Only">
+    The component uses `'use client'` directive since theme detection requires browser APIs
+  </Step>
+  
+  <Step title="Hydration Safety">
+    Returns `null` until mounted to prevent hydration mismatches between server and client
+  </Step>
+  
+  <Step title="Resolved Theme">
+    Uses `resolvedTheme` to get the actual theme when user has selected 'system'
+  </Step>
+  
+  <Step title="Icon Toggle">
+    Shows sun icon in dark mode and moon icon in light mode
+  </Step>
+</Steps>
+
+## Theme Configuration
+
+Default theme is configured in `data/siteMetadata.js`:
+
+```javascript data/siteMetadata.js
+const siteMetadata = {
+  title: 'Tech Blog',
+  author: 'EL-FAHIM Maymoun',
+  // ...
+  theme: 'system', // system, dark or light
+  // ...
+}
+```
+
+### Available Options
+
+- **`'system'`**: Automatically follows user's system preference (recommended)
+- **`'light'`**: Always starts in light mode
+- **`'dark'`**: Always starts in dark mode
+
+## Tailwind CSS Integration
+
+The theme system works seamlessly with Tailwind's dark mode:
+
+### Tailwind Config
+
+```javascript tailwind.config.js
+module.exports = {
+  darkMode: 'class',
+  // ...
+}
+```
+
+### Using Dark Mode Styles
+
+Apply dark mode styles using the `dark:` prefix:
+
+```html
+<div className="bg-white text-black dark:bg-gray-950 dark:text-white">
+  <h1 className="text-gray-900 dark:text-gray-100">Hello World</h1>
+  <p className="text-gray-600 dark:text-gray-400">Description text</p>
+</div>
+```
+
+<CodeGroup>
+```tsx Component Example
+export function Card({ title, description }) {
+  return (
+    <div className="rounded-lg border border-gray-200 dark:border-gray-800">
+      <div className="bg-white p-6 dark:bg-gray-900">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+          {title}
+        </h3>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">
+          {description}
+        </p>
+      </div>
+    </div>
+  )
+}
+```
+
+```css CSS Variables
+:root {
+  --color-primary: #000;
+  --color-background: #fff;
+}
+
+.dark {
+  --color-primary: #fff;
+  --color-background: #000;
+}
+```
+</CodeGroup>
+
+## Browser Theme Color
+
+The portfolio sets the browser theme color based on the active theme:
+
+```html
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#fff" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000" />
+```
+
+This updates the browser's UI (address bar, tab bar) to match the theme.
+
+## Preventing Flash of Unstyled Content
+
+next-themes automatically injects a script in the document head that:
+
+1. Reads the theme from localStorage
+2. Applies the theme class before first paint
+3. Prevents the "flash" of incorrect theme on page load
+
+<Warning>
+Always mark theme-dependent components with `'use client'` and handle the mounting state to prevent hydration errors.
+</Warning>
+
+## Programmatic Theme Access
+
+You can access and modify the theme from any client component:
+
+```typescript
+'use client'
+
+import { useTheme } from 'next-themes'
+
+export function MyComponent() {
+  const { theme, setTheme, resolvedTheme, systemTheme } = useTheme()
+  
+  return (
+    <div>
+      <p>Current theme: {theme}</p>
+      <p>Resolved theme: {resolvedTheme}</p>
+      <p>System theme: {systemTheme}</p>
+      
+      <button onClick={() => setTheme('light')}>Light</button>
+      <button onClick={() => setTheme('dark')}>Dark</button>
+      <button onClick={() => setTheme('system')}>System</button>
+    </div>
+  )
+}
+```
+
+### Theme Hook Values
+
+- **`theme`**: Current theme setting ('light', 'dark', or 'system')
+- **`resolvedTheme`**: Actual theme being displayed (resolves 'system' to 'light' or 'dark')
+- **`systemTheme`**: The system's theme preference
+- **`setTheme()`**: Function to change the theme
+
+## Custom Theme Implementation
+
+To add a custom theme (e.g., a 'blue' theme):
+
+<Steps>
+  <Step title="Update ThemeProvider">
+    ```typescript
+    <ThemeProvider 
+      attribute="class" 
+      defaultTheme="system" 
+      enableSystem
+      themes={['light', 'dark', 'blue']}
+    >
+    ```
+  </Step>
+  
+  <Step title="Add CSS Classes">
+    ```css
+    .blue {
+      --color-primary: #3b82f6;
+      --color-background: #eff6ff;
+    }
+    ```
+  </Step>
+  
+  <Step title="Update Toggle Logic">
+    ```typescript
+    <button onClick={() => setTheme('blue')}>Blue Theme</button>
+    ```
+  </Step>
+</Steps>

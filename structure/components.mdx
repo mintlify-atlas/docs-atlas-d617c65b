@@ -1,0 +1,391 @@
+---
+title: 'Components'
+description: 'Reusable React components in Maymoun Portfolio'
+icon: 'cube'
+---
+
+## Component Architecture
+
+The portfolio uses a collection of reusable React components located in the `components/` directory. All components are built with TypeScript and styled with Tailwind CSS.
+
+## Core Components
+
+### Header Component
+
+The main navigation header with logo, navigation links, and theme switcher.
+
+**Location**: `components/Header.tsx`
+
+```tsx
+const Header = () => {
+  return (
+    <header className="flex items-center justify-between py-10">
+      <div>
+        <Link href="/" aria-label={siteMetadata.headerTitle}>
+          <div className="flex items-center justify-between">
+            <div className="hidden h-6 text-2xl font-semibold sm:block">
+              <span>ⴰⵎⴰⵍⵓ</span>
+            </div>
+            <div className="hidden h-6 text-2xl font-semibold sm:block">
+              <span>Tech</span>
+            </div>
+          </div>
+        </Link>
+      </div>
+      <div className="flex items-center space-x-4 leading-5 sm:space-x-6">
+        {headerNavLinks.map((link) => (
+          <Link key={link.title} href={link.href}>
+            {link.title}
+          </Link>
+        ))}
+        <ThemeSwitch />
+        <MobileNav />
+      </div>
+    </header>
+  )
+}
+```
+
+**Features**:
+- Responsive design with mobile navigation
+- Dynamic navigation from `data/headerNavLinks.ts`
+- Integrated theme switcher
+- Tifinagh logo display
+
+### Card Component
+
+A flexible card component for displaying projects or featured content.
+
+**Location**: `components/Card.tsx`
+
+```tsx
+interface CardProps {
+  title: string
+  description: string
+  imgSrc?: string
+  href?: string
+}
+
+const Card = ({ title, description, imgSrc, href }: CardProps) => (
+  <div className="md max-w-[544px] p-4 md:w-1/2">
+    <div className="overflow-hidden rounded-md border-2 border-gray-200 dark:border-gray-700">
+      {imgSrc && (
+        <Link href={href} aria-label={`Link to ${title}`}>
+          <Image
+            alt={title}
+            src={imgSrc}
+            className="object-cover object-center md:h-36 lg:h-48"
+            width={544}
+            height={306}
+          />
+        </Link>
+      )}
+      <div className="p-6">
+        <h2 className="mb-3 text-2xl font-bold">
+          {href ? <Link href={href}>{title}</Link> : title}
+        </h2>
+        <p className="prose mb-3 text-gray-500 dark:text-gray-400">
+          {description}
+        </p>
+        {href && (
+          <Link href={href} className="text-primary-500 hover:text-primary-600">
+            Learn more &rarr;
+          </Link>
+        )}
+      </div>
+    </div>
+  </div>
+)
+```
+
+**Props**:
+- `title` (string, required) - Card title
+- `description` (string, required) - Card description
+- `imgSrc` (string, optional) - Image source URL
+- `href` (string, optional) - Link destination
+
+**Usage Example**:
+```tsx
+<Card
+  title="My Project"
+  description="A cool project I built"
+  imgSrc="/static/images/project.jpg"
+  href="/projects/my-project"
+/>
+```
+
+### Link Component
+
+Custom link wrapper that handles internal, external, and anchor links.
+
+**Location**: `components/Link.tsx`
+
+```tsx
+const CustomLink = ({ href, ...rest }: LinkProps) => {
+  const isInternalLink = href && href.startsWith('/')
+  const isAnchorLink = href && href.startsWith('#')
+
+  if (isInternalLink) {
+    return <Link href={href} {...rest} />
+  }
+
+  if (isAnchorLink) {
+    return <a href={href} {...rest} />
+  }
+
+  return <a target="_blank" rel="noopener noreferrer" href={href} {...rest} />
+}
+```
+
+**Features**:
+- Automatic Next.js Link for internal routes
+- External links open in new tab with security attributes
+- Anchor links for same-page navigation
+
+### Image Component
+
+Wrapper around Next.js Image for optimized images.
+
+**Location**: `components/Image.tsx`
+
+```tsx
+const Image = ({ ...rest }: ImageProps) => <NextImage {...rest} />
+```
+
+Provides all Next.js Image optimization features:
+- Automatic WebP/AVIF conversion
+- Lazy loading
+- Responsive images
+- Blur placeholder support
+
+### Tag Component
+
+Clickable tag component for blog post categorization.
+
+**Location**: `components/Tag.tsx`
+
+```tsx
+interface Props {
+  text: string
+}
+
+const Tag = ({ text }: Props) => {
+  return (
+    <Link
+      href={`/tags/${slug(text)}`}
+      className="mr-3 text-sm font-medium uppercase text-primary-500"
+    >
+      {text.split(' ').join('-')}
+    </Link>
+  )
+}
+```
+
+**Features**:
+- Automatic slug generation with `github-slugger`
+- Links to tag filter pages
+- Consistent styling with theme colors
+
+## Layout Components
+
+### SectionContainer
+
+Wrapper component for consistent page width and padding.
+
+**Location**: `components/SectionContainer.tsx`
+
+```tsx
+const SectionContainer = ({ children }) => {
+  return (
+    <section className="mx-auto max-w-3xl px-4 sm:px-6 xl:max-w-5xl xl:px-0">
+      {children}
+    </section>
+  )
+}
+```
+
+### PageTitle
+
+Standardized page title component.
+
+**Location**: `components/PageTitle.tsx`
+
+```tsx
+const PageTitle = ({ children }) => {
+  return (
+    <h1 className="text-3xl font-extrabold leading-9 tracking-tight text-gray-900 dark:text-gray-100 sm:text-4xl sm:leading-10 md:text-5xl md:leading-14">
+      {children}
+    </h1>
+  )
+}
+```
+
+## Interactive Components
+
+### ThemeSwitch
+
+Toggle between light, dark, and system theme.
+
+**Location**: `components/ThemeSwitch.tsx`
+
+**Features**:
+- Three theme modes: light, dark, system
+- Persistent theme selection
+- Smooth transitions
+- Integration with `next-themes`
+
+### MobileNav
+
+Mobile-responsive navigation menu.
+
+**Location**: `components/MobileNav.tsx`
+
+**Features**:
+- Hamburger menu toggle
+- Slide-in navigation drawer
+- Same links as desktop header
+- Theme switcher integration
+
+### SearchButton
+
+Command palette search trigger.
+
+**Location**: `components/SearchButton.tsx`
+
+**Features**:
+- Keyboard shortcut (Cmd/Ctrl + K)
+- Integration with kbar search
+- Searches through all blog posts
+
+### ScrollTopAndComment
+
+Floating action buttons for scroll-to-top and jump-to-comments.
+
+**Location**: `components/ScrollTopAndComment.tsx`
+
+**Features**:
+- Appears on scroll
+- Smooth scroll animations
+- Conditional comment button display
+
+## MDX Components
+
+Custom components available in MDX content.
+
+**Location**: `components/MDXComponents.tsx`
+
+```tsx
+export const components: MDXComponents = {
+  Image,              // Optimized images in MDX
+  TOCInline,          // Inline table of contents
+  a: CustomLink,      // Custom link handling
+  pre: Pre,           // Code blocks with copy button
+  BlogNewsletterForm, // Newsletter subscription
+}
+```
+
+<Accordion title="MDX Component Usage Examples">
+```mdx
+# In your MDX files
+
+<Image src="/static/images/photo.jpg" alt="Photo" width={600} height={400} />
+
+<TOCInline toc={props.toc} />
+
+<BlogNewsletterForm title="Subscribe to the newsletter" />
+```
+</Accordion>
+
+## Social Icons
+
+SVG social media icons with customizable size and color.
+
+**Location**: `components/social-icons/`
+
+```tsx
+import SocialIcon from '@/components/social-icons'
+
+<SocialIcon kind="github" href="https://github.com/username" />
+<SocialIcon kind="twitter" href="https://twitter.com/username" />
+<SocialIcon kind="linkedin" href="https://linkedin.com/in/username" />
+<SocialIcon kind="mail" href="mailto:email@example.com" />
+```
+
+**Available Icons**:
+- GitHub
+- Twitter
+- LinkedIn
+- Mail
+- Facebook
+- YouTube
+
+## Component Best Practices
+
+<CardGroup cols={2}>
+  <Card title="TypeScript" icon="code">
+    All components use TypeScript with proper interface definitions
+  </Card>
+  <Card title="Accessibility" icon="universal-access">
+    ARIA labels and semantic HTML throughout
+  </Card>
+  <Card title="Responsive" icon="mobile">
+    Mobile-first design with Tailwind breakpoints
+  </Card>
+  <Card title="Dark Mode" icon="moon">
+    Dark mode variants for all components
+  </Card>
+</CardGroup>
+
+## Adding Custom Components
+
+<Steps>
+  <Step title="Create Component File">
+    Create a new `.tsx` file in `components/` directory
+    ```tsx
+    // components/MyComponent.tsx
+    interface MyComponentProps {
+      title: string
+    }
+    
+    const MyComponent = ({ title }: MyComponentProps) => {
+      return <div>{title}</div>
+    }
+    
+    export default MyComponent
+    ```
+  </Step>
+  
+  <Step title="Import and Use">
+    Import the component where needed
+    ```tsx
+    import MyComponent from '@/components/MyComponent'
+    
+    <MyComponent title="Hello" />
+    ```
+  </Step>
+  
+  <Step title="Add to MDX (Optional)">
+    To use in MDX content, add to `MDXComponents.tsx`
+    ```tsx
+    export const components: MDXComponents = {
+      // ... existing components
+      MyComponent,
+    }
+    ```
+  </Step>
+</Steps>
+
+<Note>
+All components support dark mode through Tailwind's `dark:` variants. Make sure to include appropriate dark mode styles when creating new components.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Layouts" icon="layer-group" href="/structure/layouts">
+    Explore page layout components
+  </Card>
+  <Card title="Styling" icon="palette" href="/customization/styling">
+    Learn about styling and theming
+  </Card>
+</CardGroup>

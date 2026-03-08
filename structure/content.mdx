@@ -1,0 +1,535 @@
+---
+title: 'Content Management'
+description: 'Contentlayer configuration and content structure'
+icon: 'file-code'
+---
+
+## Content System Overview
+
+Maymoun's Portfolio uses **Contentlayer** for type-safe MDX content management. Contentlayer transforms MDX files into type-safe JSON data that can be imported directly in your components.
+
+<CardGroup cols={2}>
+  <Card title="Type Safety" icon="shield">
+    Generated TypeScript types for all content
+  </Card>
+  <Card title="MDX Support" icon="file-code">
+    Full MDX with React components
+  </Card>
+  <Card title="Hot Reload" icon="bolt">
+    Instant updates during development
+  </Card>
+  <Card title="Build Time" icon="rocket">
+    Content processed at build time
+  </Card>
+</CardGroup>
+
+## Contentlayer Configuration
+
+**Location**: `contentlayer.config.ts`
+
+### Document Types
+
+Two document types are defined: `Blog` and `Authors`.
+
+<Tabs>
+  <Tab title="Blog Document">
+    ```typescript
+    export const Blog = defineDocumentType(() => ({
+      name: 'Blog',
+      filePathPattern: 'blog/**/*.mdx',
+      contentType: 'mdx',
+      fields: {
+        title: { type: 'string', required: true },
+        date: { type: 'date', required: true },
+        tags: { type: 'list', of: { type: 'string' }, default: [] },
+        lastmod: { type: 'date' },
+        draft: { type: 'boolean' },
+        summary: { type: 'string' },
+        images: { type: 'json' },
+        authors: { type: 'list', of: { type: 'string' } },
+        layout: { type: 'string' },
+        bibliography: { type: 'string' },
+        canonicalUrl: { type: 'string' },
+      },
+      computedFields: {
+        readingTime: { 
+          type: 'json', 
+          resolve: (doc) => readingTime(doc.body.raw) 
+        },
+        slug: {
+          type: 'string',
+          resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ''),
+        },
+        path: {
+          type: 'string',
+          resolve: (doc) => doc._raw.flattenedPath,
+        },
+        filePath: {
+          type: 'string',
+          resolve: (doc) => doc._raw.sourceFilePath,
+        },
+        toc: { 
+          type: 'string', 
+          resolve: (doc) => extractTocHeadings(doc.body.raw) 
+        },
+        structuredData: {
+          type: 'json',
+          resolve: (doc) => ({
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: doc.title,
+            datePublished: doc.date,
+            dateModified: doc.lastmod || doc.date,
+            description: doc.summary,
+            image: doc.images ? doc.images[0] : siteMetadata.socialBanner,
+            url: `${siteMetadata.siteUrl}/${doc._raw.flattenedPath}`,
+          }),
+        },
+      },
+    }))
+    ```
+    
+    **Fields**:
+    - `title` (required) - Post title
+    - `date` (required) - Publication date
+    - `tags` - Array of tag strings
+    - `summary` - Post excerpt
+    - `authors` - Author references
+    - `layout` - Layout component name
+    - `draft` - Hide from production
+    - `images` - Featured images
+    
+    **Computed Fields**:
+    - `readingTime` - Auto-calculated reading time
+    - `slug` - URL-friendly slug
+    - `toc` - Table of contents
+    - `structuredData` - SEO schema markup
+  </Tab>
+  
+  <Tab title="Authors Document">
+    ```typescript
+    export const Authors = defineDocumentType(() => ({
+      name: 'Authors',
+      filePathPattern: 'authors/**/*.mdx',
+      contentType: 'mdx',
+      fields: {
+        name: { type: 'string', required: true },
+        avatar: { type: 'string' },
+        occupation: { type: 'string' },
+        company: { type: 'string' },
+        email: { type: 'string' },
+        twitter: { type: 'string' },
+        linkedin: { type: 'string' },
+        github: { type: 'string' },
+        layout: { type: 'string' },
+      },
+      computedFields: {
+        readingTime: { type: 'json', resolve: (doc) => readingTime(doc.body.raw) },
+        slug: {
+          type: 'string',
+          resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ''),
+        },
+        path: {
+          type: 'string',
+          resolve: (doc) => doc._raw.flattenedPath,
+        },
+        filePath: {
+          type: 'string',
+          resolve: (doc) => doc._raw.sourceFilePath,
+        },
+      },
+    }))
+    ```
+    
+    **Fields**:
+    - `name` (required) - Author name
+    - `avatar` - Profile image path
+    - `occupation` - Job title
+    - `company` - Company name
+    - `email` - Contact email
+    - `twitter` - Twitter URL
+    - `linkedin` - LinkedIn URL
+    - `github` - GitHub URL
+  </Tab>
+</Tabs>
+
+### MDX Plugins
+
+Contentlayer is configured with powerful MDX processing plugins:
+
+#### Remark Plugins (Markdown Processing)
+
+```typescript
+remarkPlugins: [
+  remarkExtractFrontmatter,  // Extract YAML frontmatter
+  remarkGfm,                 // GitHub Flavored Markdown
+  remarkCodeTitles,          // Code block titles
+  remarkMath,                // Math equations
+  remarkImgToJsx,            // Convert images to JSX
+]
+```
+
+<Accordion title="Remark Plugin Details">
+- **remarkExtractFrontmatter**: Parses YAML frontmatter into typed data
+- **remarkGfm**: Adds tables, task lists, strikethrough, autolinks
+- **remarkCodeTitles**: Enables code block titles like ` ```js:filename.js`
+- **remarkMath**: LaTeX math support with KaTeX
+- **remarkImgToJsx**: Transforms markdown images to Next.js Image components
+</Accordion>
+
+#### Rehype Plugins (HTML Processing)
+
+```typescript
+rehypePlugins: [
+  rehypeSlug,                               // Add IDs to headings
+  rehypeAutolinkHeadings,                   // Add anchor links to headings
+  rehypeKatex,                              // Render math equations
+  [rehypeCitation, { path: path.join(root, 'data') }],
+  [rehypePrismPlus, { 
+    defaultLanguage: 'js', 
+    ignoreMissing: true 
+  }],
+  rehypePresetMinify,                       // Minify output HTML
+]
+```
+
+<Accordion title="Rehype Plugin Details">
+- **rehypeSlug**: Generates heading IDs for anchor links
+- **rehypeAutolinkHeadings**: Clickable heading anchors
+- **rehypeKatex**: Renders LaTeX math with KaTeX
+- **rehypeCitation**: Academic citation support
+- **rehypePrismPlus**: Syntax highlighting with line numbers and highlighting
+- **rehypePresetMinify**: Minifies HTML output
+</Accordion>
+
+### Build Hooks
+
+```typescript
+export default makeSource({
+  contentDirPath: 'data',
+  documentTypes: [Blog, Authors],
+  mdx: { /* ... */ },
+  onSuccess: async (importData) => {
+    const { allBlogs } = await importData()
+    createTagCount(allBlogs)      // Generate tag-data.json
+    createSearchIndex(allBlogs)   // Generate search.json
+  },
+})
+```
+
+**Post-processing**:
+1. **Tag Count Generation**: Creates `app/tag-data.json` with tag statistics
+2. **Search Index**: Generates `public/search.json` for kbar search
+
+## Content Directory Structure
+
+```plaintext
+data/
+├── blog/
+│   └── meet-kafka.mdx
+├── authors/
+│   ├── default.mdx
+│   └── sparrowhawk.mdx
+├── siteMetadata.js
+├── headerNavLinks.ts
+├── projectsData.ts
+└── references-data.bib
+```
+
+### Blog Posts
+
+**Location**: `data/blog/`
+
+Blog posts are MDX files with YAML frontmatter:
+
+```mdx
+---
+title: 'Meet Kafka'
+date: '2024-03-08'
+tags: ['kafka', 'streaming', 'architecture']
+summary: 'An introduction to Apache Kafka'
+authors: ['default']
+layout: PostLayout
+---
+
+# Introduction
+
+Apache Kafka is a distributed streaming platform...
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="High Throughput">
+    Handles millions of messages per second
+  </Card>
+  <Card title="Scalable">
+    Easily scales horizontally
+  </Card>
+</CardGroup>
+
+```javascript:example.js
+const kafka = require('kafka-node')
+```
+
+<Image src="/static/images/kafka-architecture.png" alt="Kafka Architecture" />
+```
+
+### Author Files
+
+**Location**: `data/authors/`
+
+Author profiles with bio content:
+
+```mdx
+---
+name: 'EL-FAHIM Maymoun'
+avatar: '/static/images/avatar.jpg'
+occupation: 'Software Engineer'
+company: 'Tech Company'
+email: 'elfahim.maymoun99@gmail.com'
+twitter: 'https://twitter.com/Amalou88188197'
+linkedin: 'https://linkedin.com/in/maymoun-elfahim'
+github: 'https://github.com/Amalou99'
+---
+
+I'm a passionate software engineer specializing in distributed systems...
+
+## Experience
+
+- **Position** at Company (2020-Present)
+- **Previous Role** at Previous Company (2018-2020)
+
+## Skills
+
+- JavaScript/TypeScript
+- React/Next.js
+- Node.js
+```
+
+## Using Content in Components
+
+### Import Generated Types
+
+```typescript
+import { allBlogs, allAuthors } from 'contentlayer/generated'
+import type { Blog, Authors } from 'contentlayer/generated'
+```
+
+### Query Blog Posts
+
+```tsx
+// Get all published posts
+const posts = allBlogs
+  .filter((post) => !post.draft)
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+
+// Get single post by slug
+const post = allBlogs.find((p) => p.slug === 'meet-kafka')
+
+// Get posts by tag
+const taggedPosts = allBlogs.filter((post) => 
+  post.tags?.includes('kafka')
+)
+```
+
+### Render MDX Content
+
+```tsx
+import { useMDXComponent } from 'next-contentlayer/hooks'
+import { components } from '@/components/MDXComponents'
+
+export default function BlogPost({ post }: { post: Blog }) {
+  const MDXContent = useMDXComponent(post.body.code)
+  
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <time>{post.date}</time>
+      <MDXContent components={components} />
+    </article>
+  )
+}
+```
+
+## Advanced MDX Features
+
+### Code Blocks with Titles
+
+````mdx
+```javascript:myFile.js
+const greeting = 'Hello World'
+console.log(greeting)
+```
+````
+
+### Math Equations
+
+```mdx
+Inline math: $E = mc^2$
+
+Block math:
+$$
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+$$
+```
+
+### Tables
+
+```mdx
+| Feature | Description |
+|---------|-------------|
+| Fast | High performance |
+| Scalable | Grows with you |
+```
+
+### Task Lists
+
+```mdx
+- [x] Complete feature A
+- [x] Write tests
+- [ ] Deploy to production
+```
+
+### Citations
+
+Use BibTeX citations with `references-data.bib`:
+
+```mdx
+According to the research [@smith2020], Kafka is...
+
+## References
+
+<Bibliography />
+```
+
+## Content Helpers
+
+### Tag Data
+
+Auto-generated tag counts:
+
+```typescript
+import tagData from 'app/tag-data.json'
+
+const tagCounts = tagData as Record<string, number>
+// { "kafka": 5, "react": 12, ... }
+```
+
+### Search Index
+
+Auto-generated search data:
+
+```typescript
+// public/search.json contains:
+[
+  {
+    "title": "Meet Kafka",
+    "summary": "An introduction to Apache Kafka",
+    "slug": "blog/meet-kafka",
+    "date": "2024-03-08"
+  },
+  // ...
+]
+```
+
+## Adding New Content
+
+<Steps>
+  <Step title="Create MDX File">
+    Create a new `.mdx` file in `data/blog/`:
+    
+    ```bash
+    touch data/blog/my-new-post.mdx
+    ```
+  </Step>
+  
+  <Step title="Add Frontmatter">
+    Add required frontmatter:
+    
+    ```yaml
+    ---
+    title: 'My New Post'
+    date: '2024-03-08'
+    tags: ['nextjs', 'react']
+    summary: 'A brief description'
+    authors: ['default']
+    ---
+    ```
+  </Step>
+  
+  <Step title="Write Content">
+    Write your content in MDX:
+    
+    ```mdx
+    # Introduction
+    
+    This is my new blog post...
+    
+    <Image src="/static/images/example.jpg" alt="Example" />
+    ```
+  </Step>
+  
+  <Step title="View Changes">
+    Contentlayer will automatically detect changes in development mode:
+    
+    ```bash
+    yarn dev
+    ```
+    
+    Navigate to `/blog/my-new-post`
+  </Step>
+</Steps>
+
+<Note>
+**Draft Posts**: Set `draft: true` in frontmatter to hide posts from production builds while keeping them visible in development.
+</Note>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Contentlayer not detecting changes">
+    1. Restart the dev server
+    2. Delete `.contentlayer` folder and restart
+    3. Check for syntax errors in frontmatter
+  </Accordion>
+  
+  <Accordion title="Images not displaying">
+    1. Ensure images are in `public/static/images/`
+    2. Use absolute paths: `/static/images/photo.jpg`
+    3. Check image domains in `next.config.js`
+  </Accordion>
+  
+  <Accordion title="Type errors with generated types">
+    1. Run `yarn dev` to regenerate types
+    2. Restart TypeScript server in your editor
+    3. Check for typos in field names
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Frontmatter" icon="file">
+    Always include required fields (title, date) and use consistent date format
+  </Card>
+  <Card title="Images" icon="image">
+    Optimize images before adding to public folder. Use WebP format when possible
+  </Card>
+  <Card title="Tags" icon="tags">
+    Use consistent, lowercase tag names. Limit to 3-5 relevant tags per post
+  </Card>
+  <Card title="Summaries" icon="align-left">
+    Write clear 1-2 sentence summaries for better SEO and previews
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Writing Content" icon="pen" href="/customization/content-management">
+    Learn best practices for writing blog posts
+  </Card>
+  <Card title="Customization" icon="palette" href="/customization/styling">
+    Customize styling and appearance
+  </Card>
+</CardGroup>

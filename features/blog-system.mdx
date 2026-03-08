@@ -1,0 +1,286 @@
+---
+title: 'Blog System'
+description: 'Learn how the blog system is built with Contentlayer, MDX, and automatic tag management'
+icon: 'pen-to-square'
+---
+
+## Overview
+
+The portfolio uses **Contentlayer** to manage blog posts written in MDX format. Contentlayer transforms your content files into type-safe JSON data that can be imported directly in your application.
+
+<Info>
+Contentlayer provides automatic TypeScript types, built-in validation, and live reload during development.
+</Info>
+
+## Blog Post Structure
+
+### File Location
+
+All blog posts are stored in the `data/blog/` directory as `.mdx` files:
+
+```
+data/
+└── blog/
+    ├── meet-kafka.mdx
+    ├── understanding-react.mdx
+    └── intro-to-nextjs.mdx
+```
+
+### Frontmatter Fields
+
+Each blog post requires frontmatter metadata at the top of the file:
+
+```mdx
+---
+title: 'Meet Kafka'
+date: '2024-03-02'
+lastmod: '2024-03-02'
+tags: ['kafka', 'book', 'DevOps', 'data']
+draft: false
+summary: 'Apache Kafka is a distributed event store and stream-processing platform...'
+images: ['/static/images/kafka.jpg']
+---
+```
+
+<Steps>
+  <Step title="Required Fields">
+    - **title**: The blog post title (string, required)
+    - **date**: Publication date in YYYY-MM-DD format (date, required)
+  </Step>
+  
+  <Step title="Optional Fields">
+    - **tags**: Array of tag strings for categorization
+    - **lastmod**: Last modified date
+    - **draft**: Set to `true` to hide from production
+    - **summary**: Brief description for previews
+    - **images**: Array of image URLs for social sharing
+    - **authors**: Array of author names
+    - **layout**: Custom layout template
+    - **bibliography**: Citation file reference
+    - **canonicalUrl**: Canonical URL for SEO
+  </Step>
+</Steps>
+
+## Contentlayer Configuration
+
+The blog document type is defined in `contentlayer.config.ts`:
+
+```typescript contentlayer.config.ts
+export const Blog = defineDocumentType(() => ({
+  name: 'Blog',
+  filePathPattern: 'blog/**/*.mdx',
+  contentType: 'mdx',
+  fields: {
+    title: { type: 'string', required: true },
+    date: { type: 'date', required: true },
+    tags: { type: 'list', of: { type: 'string' }, default: [] },
+    lastmod: { type: 'date' },
+    draft: { type: 'boolean' },
+    summary: { type: 'string' },
+    images: { type: 'json' },
+    authors: { type: 'list', of: { type: 'string' } },
+    layout: { type: 'string' },
+    bibliography: { type: 'string' },
+    canonicalUrl: { type: 'string' },
+  },
+  computedFields: {
+    ...computedFields,
+    structuredData: {
+      type: 'json',
+      resolve: (doc) => ({
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: doc.title,
+        datePublished: doc.date,
+        dateModified: doc.lastmod || doc.date,
+        description: doc.summary,
+        image: doc.images ? doc.images[0] : siteMetadata.socialBanner,
+        url: `${siteMetadata.siteUrl}/${doc._raw.flattenedPath}`,
+      }),
+    },
+  },
+}))
+```
+
+## Computed Fields
+
+Contentlayer automatically computes additional fields for each blog post:
+
+### Reading Time
+
+```typescript
+readingTime: { 
+  type: 'json', 
+  resolve: (doc) => readingTime(doc.body.raw) 
+}
+```
+
+Automatically calculates reading time using the `reading-time` package.
+
+### Slug Generation
+
+```typescript
+slug: {
+  type: 'string',
+  resolve: (doc) => doc._raw.flattenedPath.replace(/^.+?(\/)/, ''),
+}
+```
+
+Extracts the slug from the file path (e.g., `blog/meet-kafka` → `meet-kafka`).
+
+### Table of Contents
+
+```typescript
+toc: { 
+  type: 'string', 
+  resolve: (doc) => extractTocHeadings(doc.body.raw) 
+}
+```
+
+Extracts headings for automatic table of contents generation.
+
+## Tag System
+
+The portfolio automatically generates tag counts and indexes:
+
+```typescript
+function createTagCount(allBlogs) {
+  const tagCount: Record<string, number> = {}
+  allBlogs.forEach((file) => {
+    if (file.tags && (!isProduction || file.draft !== true)) {
+      file.tags.forEach((tag) => {
+        const formattedTag = GithubSlugger.slug(tag)
+        if (formattedTag in tagCount) {
+          tagCount[formattedTag] += 1
+        } else {
+          tagCount[formattedTag] = 1
+        }
+      })
+    }
+  })
+  writeFileSync('./app/tag-data.json', JSON.stringify(tagCount))
+}
+```
+
+<Note>
+Tags are automatically slugified using `github-slugger`, so "DevOps" becomes "devops" in URLs.
+</Note>
+
+## MDX Plugins
+
+The blog system uses several remark and rehype plugins for enhanced functionality:
+
+### Remark Plugins (Markdown Processing)
+
+```typescript
+remarkPlugins: [
+  remarkExtractFrontmatter,  // Extract frontmatter
+  remarkGfm,                 // GitHub Flavored Markdown
+  remarkCodeTitles,          // Code block titles
+  remarkMath,                // Math equations
+  remarkImgToJsx,            // Convert images to JSX
+]
+```
+
+### Rehype Plugins (HTML Processing)
+
+```typescript
+rehypePlugins: [
+  rehypeSlug,                              // Add IDs to headings
+  rehypeAutolinkHeadings,                  // Add links to headings
+  rehypeKatex,                             // Render math with KaTeX
+  [rehypeCitation, { path: path.join(root, 'data') }],
+  [rehypePrismPlus, { 
+    defaultLanguage: 'js', 
+    ignoreMissing: true 
+  }],
+  rehypePresetMinify,                      // Minify HTML output
+]
+```
+
+## Writing Blog Posts
+
+<Steps>
+  <Step title="Create MDX File">
+    Create a new `.mdx` file in `data/blog/` with a descriptive filename:
+    ```bash
+    touch data/blog/my-new-post.mdx
+    ```
+  </Step>
+  
+  <Step title="Add Frontmatter">
+    Add the required frontmatter fields at the top:
+    ```mdx
+    ---
+    title: 'My New Post'
+    date: '2024-03-15'
+    tags: ['nextjs', 'react']
+    draft: false
+    summary: 'A brief description of my post'
+    ---
+    ```
+  </Step>
+  
+  <Step title="Write Content">
+    Write your content using MDX (Markdown + JSX):
+    ```mdx
+    ## Introduction
+    
+    This is my blog post content...
+    
+    <Note>
+      You can use custom components!
+    </Note>
+    ```
+  </Step>
+  
+  <Step title="Preview">
+    Run the development server to preview:
+    ```bash
+    npm run dev
+    ```
+    Navigate to `http://localhost:3000/blog/my-new-post`
+  </Step>
+</Steps>
+
+## Structured Data
+
+Every blog post automatically generates structured data for SEO:
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Meet Kafka",
+  "datePublished": "2024-03-02",
+  "dateModified": "2024-03-02",
+  "description": "Apache Kafka is a distributed event store...",
+  "image": "/static/images/kafka.jpg",
+  "url": "https://melfahim-portfolio.vercel.app/blog/meet-kafka"
+}
+```
+
+<Warning>
+Make sure to set `draft: false` when you're ready to publish. Draft posts are hidden in production builds.
+</Warning>
+
+## Search Index Generation
+
+Whenever you build the site, Contentlayer automatically generates a search index:
+
+```typescript
+function createSearchIndex(allBlogs) {
+  if (
+    siteMetadata?.search?.provider === 'kbar' &&
+    siteMetadata.search.kbarConfig.searchDocumentsPath
+  ) {
+    writeFileSync(
+      `public/${siteMetadata.search.kbarConfig.searchDocumentsPath}`,
+      JSON.stringify(allCoreContent(sortPosts(allBlogs)))
+    )
+    console.log('Local search index generated...')
+  }
+}
+```
+
+This creates a `public/search.json` file with all blog post metadata for the search functionality.

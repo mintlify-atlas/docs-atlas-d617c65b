@@ -1,0 +1,578 @@
+---
+title: 'Styling'
+description: 'Customize the look and feel of your portfolio with Tailwind CSS'
+---
+
+## Overview
+
+Maymoun's Portfolio uses Tailwind CSS for styling, providing a highly customizable design system. The main configuration is in `tailwind.config.js`, with additional custom CSS in the `css/` directory.
+
+## Tailwind CSS Configuration
+
+The Tailwind configuration file controls the entire design system of your portfolio.
+
+### Configuration File Structure
+
+```javascript tailwind.config.js
+const { fontFamily } = require('tailwindcss/defaultTheme')
+const colors = require('tailwindcss/colors')
+
+module.exports = {
+  content: [
+    './node_modules/pliny/**/*.js',
+    './app/**/*.{js,ts,jsx,tsx}',
+    './pages/**/*.{js,ts,tsx}',
+    './components/**/*.{js,ts,tsx}',
+    './layouts/**/*.{js,ts,tsx}',
+    './data/**/*.mdx',
+  ],
+  darkMode: 'class',
+  theme: {
+    extend: {
+      // Custom configurations
+    },
+  },
+  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],
+}
+```
+
+<Note>
+  The `content` array tells Tailwind where to look for class names to include in the final CSS bundle. Make sure to include all paths where you use Tailwind classes.
+</Note>
+
+## Color Customization
+
+### Primary Color Theme
+
+The portfolio uses a primary color scheme that you can easily customize:
+
+```javascript tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      colors: {
+        primary: colors.pink,
+        gray: colors.gray,
+      },
+    },
+  },
+}
+```
+
+<Tabs>
+  <Tab title="Pink (Default)">
+    ```javascript
+    colors: {
+      primary: colors.pink,
+    }
+    ```
+    The default pink color scheme provides a modern, vibrant look.
+  </Tab>
+
+  <Tab title="Blue">
+    ```javascript
+    colors: {
+      primary: colors.blue,
+    }
+    ```
+    Professional and trustworthy blue color scheme.
+  </Tab>
+
+  <Tab title="Purple">
+    ```javascript
+    colors: {
+      primary: colors.purple,
+    }
+    ```
+    Creative and modern purple color scheme.
+  </Tab>
+
+  <Tab title="Green">
+    ```javascript
+    colors: {
+      primary: colors.green,
+    }
+    ```
+    Fresh and natural green color scheme.
+  </Tab>
+
+  <Tab title="Custom">
+    ```javascript
+    colors: {
+      primary: {
+        50: '#fdf2f8',
+        100: '#fce7f3',
+        200: '#fbcfe8',
+        300: '#f9a8d4',
+        400: '#f472b6',
+        500: '#ec4899', // Main color
+        600: '#db2777',
+        700: '#be185d',
+        800: '#9d174d',
+        900: '#831843',
+      },
+    }
+    ```
+    Define your own custom color palette with all shades.
+  </Tab>
+</Tabs>
+
+### Using Colors in Your Site
+
+The primary color is used throughout the site:
+
+- Links and hover states
+- Code highlighting accents
+- Button backgrounds
+- Active navigation states
+- Highlighted code lines
+
+## Typography Configuration
+
+### Font Families
+
+The portfolio uses Space Grotesk as the default sans-serif font:
+
+```javascript tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['var(--font-space-grotesk)', ...fontFamily.sans],
+      },
+    },
+  },
+}
+```
+
+<Steps>
+  <Step title="Change Font Family">
+    To use a different font, update the configuration:
+
+    ```javascript tailwind.config.js
+    fontFamily: {
+      sans: ['Inter', 'system-ui', 'sans-serif'],
+      // or
+      sans: ['Poppins', 'system-ui', 'sans-serif'],
+      // or
+      sans: ['Roboto', 'system-ui', 'sans-serif'],
+    }
+    ```
+  </Step>
+
+  <Step title="Add Font Source">
+    If using Google Fonts, add to your layout or `_app.js`:
+
+    ```javascript
+    import { Inter } from 'next/font/google'
+
+    const inter = Inter({ subsets: ['latin'] })
+    ```
+  </Step>
+</Steps>
+
+### Custom Line Heights
+
+The configuration includes extended line height options:
+
+```javascript tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      lineHeight: {
+        11: '2.75rem',
+        12: '3rem',
+        13: '3.25rem',
+        14: '3.5rem',
+      },
+    },
+  },
+}
+```
+
+Use these for better typography control:
+
+```html
+<h1 className="text-4xl leading-12">Large Heading</h1>
+<h2 className="text-3xl leading-11">Medium Heading</h2>
+```
+
+### Typography Plugin
+
+The `@tailwindcss/typography` plugin provides beautiful typography defaults for MDX content:
+
+```javascript tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      typography: ({ theme }) => ({
+        DEFAULT: {
+          css: {
+            a: {
+              color: theme('colors.primary.500'),
+              '&:hover': {
+                color: `${theme('colors.primary.600')}`,
+              },
+              code: { color: theme('colors.primary.400') },
+            },
+            'h1,h2': {
+              fontWeight: '700',
+              letterSpacing: theme('letterSpacing.tight'),
+            },
+            h3: {
+              fontWeight: '600',
+            },
+            code: {
+              color: theme('colors.indigo.500'),
+            },
+          },
+        },
+        invert: {
+          css: {
+            a: {
+              color: theme('colors.primary.500'),
+              '&:hover': {
+                color: `${theme('colors.primary.400')}`,
+              },
+              code: { color: theme('colors.primary.400') },
+            },
+            'h1,h2,h3,h4,h5,h6': {
+              color: theme('colors.gray.100'),
+            },
+          },
+        },
+      }),
+    },
+  },
+  plugins: [require('@tailwindcss/typography')],
+}
+```
+
+<Note>
+  The `invert` variant provides dark mode-optimized typography styles. It's automatically applied when dark mode is active.
+</Note>
+
+## Custom CSS Files
+
+The portfolio includes custom CSS files in the `css/` directory for additional styling.
+
+### Main Tailwind CSS
+
+`css/tailwind.css` contains Tailwind directives and custom utility classes:
+
+```css css/tailwind.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Task list styling */
+.task-list-item::before {
+  @apply hidden;
+}
+
+.task-list-item {
+  @apply list-none;
+}
+
+/* Footnotes styling */
+.footnotes {
+  @apply mt-12 border-t border-gray-200 pt-8 dark:border-gray-700;
+}
+
+.data-footnote-backref {
+  @apply no-underline;
+}
+
+/* Citations styling */
+.csl-entry {
+  @apply my-5;
+}
+
+/* Autofill fix for form inputs */
+input:-webkit-autofill,
+input:-webkit-autofill:focus {
+  transition:
+    background-color 600000s 0s,
+    color 600000s 0s;
+}
+```
+
+### Code Syntax Highlighting
+
+`css/prism.css` provides syntax highlighting for code blocks using Night Owl theme:
+
+```css css/prism.css
+/* Code title styles */
+.remark-code-title {
+  @apply rounded-t bg-gray-700 dark:bg-gray-800 px-5 py-3 font-mono text-sm font-bold text-gray-200;
+}
+
+.remark-code-title + div > pre {
+  @apply mt-0 rounded-t-none;
+}
+
+/* Code block styles */
+.code-highlight {
+  @apply float-left min-w-full;
+}
+
+.code-line {
+  @apply -mx-4 block border-l-4 border-transparent pl-4 pr-4;
+}
+
+.code-line.inserted {
+  @apply bg-green-500 bg-opacity-20;
+}
+
+.code-line.deleted {
+  @apply bg-red-500 bg-opacity-20;
+}
+
+.highlight-line {
+  @apply -mx-4 border-l-4 border-primary-500 bg-gray-700 bg-opacity-50;
+}
+
+.line-number::before {
+  @apply mr-4 -ml-2 inline-block w-4 text-right text-gray-400;
+  content: attr(line);
+}
+```
+
+<Accordion title="Token Colors (Night Owl Theme)">
+  The syntax highlighting uses Night Owl theme with these token colors:
+
+  ```css
+  .token.comment,
+  .token.prolog,
+  .token.cdata {
+    color: rgb(99, 119, 119);
+    font-style: italic;
+  }
+
+  .token.punctuation {
+    color: rgb(199, 146, 234);
+  }
+
+  .token.string {
+    color: rgb(173, 219, 103);
+  }
+
+  .token.number {
+    color: rgb(247, 140, 108);
+  }
+
+  .token.boolean {
+    color: rgb(255, 88, 116);
+  }
+
+  .token.function,
+  .token.builtin {
+    color: rgb(130, 170, 255);
+  }
+
+  .token.keyword,
+  .token.operator {
+    color: rgb(127, 219, 202);
+  }
+  ```
+</Accordion>
+
+## Dark Mode Configuration
+
+The portfolio uses class-based dark mode:
+
+```javascript tailwind.config.js
+module.exports = {
+  darkMode: 'class',
+  // ...
+}
+```
+
+<Steps>
+  <Step title="Understanding Dark Mode">
+    When `darkMode: 'class'` is set, dark mode styles apply when a parent element has the `dark` class:
+
+    ```html
+    <html class="dark">
+      <!-- Dark mode is active -->
+    </html>
+    ```
+  </Step>
+
+  <Step title="Using Dark Mode Variants">
+    Apply dark mode styles using the `dark:` variant:
+
+    ```html
+    <div class="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      Content adapts to light and dark modes
+    </div>
+    ```
+  </Step>
+
+  <Step title="Typography Dark Mode">
+    The typography plugin automatically handles dark mode with the `prose-invert` class:
+
+    ```html
+    <article class="prose dark:prose-invert">
+      <!-- Typography adapts to dark mode -->
+    </article>
+    ```
+  </Step>
+</Steps>
+
+## Custom Styling Examples
+
+### Creating Custom Components
+
+Add custom component classes to `css/tailwind.css`:
+
+```css css/tailwind.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn-primary {
+    @apply rounded-lg bg-primary-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700;
+  }
+
+  .card {
+    @apply rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800;
+  }
+
+  .input-field {
+    @apply w-full rounded-md border border-gray-300 px-3 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700;
+  }
+}
+```
+
+### Custom Utilities
+
+Add custom utility classes:
+
+```css css/tailwind.css
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+```
+
+## Advanced Customization
+
+### Extending the Theme
+
+Add custom spacing, border radius, or other design tokens:
+
+```javascript tailwind.config.js
+module.exports = {
+  theme: {
+    extend: {
+      spacing: {
+        '128': '32rem',
+        '144': '36rem',
+      },
+      borderRadius: {
+        '4xl': '2rem',
+      },
+      boxShadow: {
+        'glow': '0 0 20px rgba(236, 72, 153, 0.3)',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.5s ease-in-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+    },
+  },
+}
+```
+
+### Code Block Customization
+
+Customize code block appearance:
+
+```css css/prism.css
+/* Add a custom code title color */
+.remark-code-title {
+  @apply rounded-t bg-primary-900 dark:bg-primary-950 px-5 py-3 font-mono text-sm font-bold text-white;
+}
+
+/* Change highlight color */
+.highlight-line {
+  @apply -mx-4 border-l-4 border-primary-400 bg-primary-900 bg-opacity-30;
+}
+
+/* Add custom line number styling */
+.line-number::before {
+  @apply mr-4 -ml-2 inline-block w-4 text-right text-primary-400;
+  content: attr(line);
+}
+```
+
+## Plugins
+
+The portfolio uses two official Tailwind CSS plugins:
+
+<CardGroup cols={2}>
+  <Card title="@tailwindcss/forms" icon="input-text">
+    Provides better default styles for form elements like inputs, selects, and textareas.
+
+    ```javascript
+    plugins: [require('@tailwindcss/forms')]
+    ```
+  </Card>
+
+  <Card title="@tailwindcss/typography" icon="text">
+    Adds beautiful typographic defaults for long-form content rendered from Markdown/MDX.
+
+    ```javascript
+    plugins: [require('@tailwindcss/typography')]
+    ```
+  </Card>
+</CardGroup>
+
+## Production Optimization
+
+Tailwind automatically removes unused CSS in production builds. The `content` configuration ensures only classes you actually use are included:
+
+```javascript tailwind.config.js
+module.exports = {
+  content: [
+    './node_modules/pliny/**/*.js',
+    './app/**/*.{js,ts,jsx,tsx}',
+    './pages/**/*.{js,ts,tsx}',
+    './components/**/*.{js,ts,tsx}',
+    './layouts/**/*.{js,ts,tsx}',
+    './data/**/*.mdx', // Important for MDX content!
+  ],
+}
+```
+
+<Warning>
+  Make sure to include all paths where you use Tailwind classes. If you add new directories, update the `content` array.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="gear" href="/customization/configuration">
+    Configure site metadata and integrations
+  </Card>
+  <Card title="Content Management" icon="file-lines" href="/customization/content-management">
+    Create and manage blog posts
+  </Card>
+</CardGroup>

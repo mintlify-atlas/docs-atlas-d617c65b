@@ -1,0 +1,269 @@
+---
+title: 'Build Process'
+description: 'Understanding the build process, optimization strategies, and production deployment'
+icon: 'hammer'
+---
+
+## Overview
+
+Maymoun's Portfolio uses Next.js 13 with Contentlayer for static site generation. The build process compiles the application, processes content, and generates RSS feeds automatically.
+
+## Build Script
+
+The production build is configured in `package.json`:
+
+```json package.json
+{
+  "scripts": {
+    "build": "CI=false cross-env INIT_CWD=$PWD next build && cross-env NODE_OPTIONS='--experimental-json-modules' node ./scripts/postbuild.mjs",
+    "start": "next dev",
+    "serve": "next start",
+    "analyze": "cross-env ANALYZE=true next build"
+  }
+}
+```
+
+### Build Steps Explained
+
+<Steps>
+  <Step title="Set CI Environment">
+    `CI=false` prevents the build from failing on warnings, useful during development
+  </Step>
+  
+  <Step title="Initialize Working Directory">
+    `INIT_CWD=$PWD` ensures Contentlayer processes files from the correct directory
+  </Step>
+  
+  <Step title="Next.js Build">
+    `next build` compiles the application, optimizes assets, and generates static pages
+  </Step>
+  
+  <Step title="Post-Build Script">
+    Executes `postbuild.mjs` to generate RSS feeds for the blog
+  </Step>
+</Steps>
+
+## Environment Variables
+
+Before building, configure the required environment variables:
+
+### Required Variables
+
+<CodeGroup>
+```bash Production
+# Umami Analytics (optional but recommended)
+NEXT_UMAMI_ID=your-umami-website-id
+
+# Giscus Comments Configuration
+NEXT_PUBLIC_GISCUS_REPO=username/repo
+NEXT_PUBLIC_GISCUS_REPOSITORY_ID=your-repo-id
+NEXT_PUBLIC_GISCUS_CATEGORY=Announcements
+NEXT_PUBLIC_GISCUS_CATEGORY_ID=your-category-id
+```
+
+```bash Development
+# All production variables plus:
+NODE_ENV=development
+ANALYZE=false
+```
+</CodeGroup>
+
+### Optional Newsletter Variables
+
+If you're using a newsletter provider (Buttondown, Mailchimp, ConvertKit, etc.):
+
+```bash .env
+# Buttondown (default provider)
+BUTTONDOWN_API_KEY=your-api-key
+
+# Mailchimp
+MAILCHIMP_API_KEY=your-api-key
+MAILCHIMP_API_SERVER=us1
+MAILCHIMP_AUDIENCE_ID=your-audience-id
+
+# ConvertKit
+CONVERTKIT_API_KEY=your-api-key
+CONVERTKIT_FORM_ID=your-form-id
+```
+
+<Note>
+  Get your Giscus IDs by visiting [giscus.app](https://giscus.app) and following the configuration wizard.
+</Note>
+
+## Production Optimization
+
+The portfolio includes several build-time optimizations:
+
+### Content Layer Processing
+
+Contentlayer processes MDX content at build time:
+
+- **Markdown to HTML**: Converts blog posts with syntax highlighting
+- **Reading Time**: Calculates estimated reading time for each post
+- **Tag Generation**: Creates tag index (`app/tag-data.json`)
+- **Type Safety**: Generates TypeScript types for content
+
+### Image Optimization
+
+Next.js Image component optimizes images automatically:
+
+```js next.config.js
+images: {
+  domains: ['picsum.photos'],
+}
+```
+
+### Bundle Analysis
+
+Analyze your bundle size to identify optimization opportunities:
+
+```bash
+npm run analyze
+```
+
+This generates an interactive visualization of your bundle composition.
+
+### Security Headers
+
+Production builds include strict security headers:
+
+- Content Security Policy (CSP)
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- Strict-Transport-Security
+- Referrer-Policy
+
+## Post-Build Scripts
+
+The post-build process automatically generates RSS feeds:
+
+### RSS Feed Generation
+
+The `postbuild.mjs` script creates:
+
+1. **Main Feed**: `/public/feed.xml` - All published blog posts
+2. **Tag Feeds**: `/public/tags/[tag]/feed.xml` - Posts filtered by tag
+
+```javascript scripts/postbuild.mjs
+import rss from './rss.mjs'
+
+async function postbuild() {
+  await rss()
+}
+
+postbuild()
+```
+
+### Feed Configuration
+
+RSS feeds are configured using `data/siteMetadata.js`:
+
+```javascript
+const siteMetadata = {
+  title: 'Tech Blog',
+  author: 'EL-FAHIM Maymoun',
+  description: 'A blog to publish some articles and introduce who i am',
+  siteUrl: 'https://melfahim-portfolio.vercel.app/',
+  email: 'elfahim.maymoun99@gmail.com',
+  language: 'en-us',
+}
+```
+
+## Build Output
+
+After a successful build, you'll see:
+
+```bash
+.next/              # Next.js build output
+├── static/         # Static assets with hashed filenames
+├── server/         # Server-side code
+└── cache/          # Build cache for faster rebuilds
+
+public/             # Public assets
+├── feed.xml        # RSS feed
+└── tags/           # Tag-specific RSS feeds
+```
+
+## Static Export Considerations
+
+<Warning>
+  This portfolio uses Next.js App Router with dynamic routes. For static exports, ensure all dynamic paths are generated at build time through Contentlayer.
+</Warning>
+
+### Dynamic Routes
+
+The following routes are statically generated:
+
+- `/blog/[...slug]` - All blog post pages
+- `/tags/[tag]` - All tag listing pages
+- `/` - Homepage with latest posts
+
+### Image Domains
+
+External images require domain whitelisting in `next.config.js`:
+
+```javascript
+images: {
+  domains: ['picsum.photos', 'your-cdn.com'],
+}
+```
+
+## Build Performance
+
+### Cache Optimization
+
+Next.js caches build artifacts for faster rebuilds:
+
+```bash
+# Clear build cache if needed
+rm -rf .next
+rm -rf .contentlayer
+```
+
+### Build Time Metrics
+
+Typical build times:
+
+- **First build**: 45-60 seconds
+- **Incremental builds**: 10-15 seconds
+- **Content-only changes**: 5-10 seconds
+
+## Troubleshooting
+
+### Common Build Errors
+
+<AccordionGroup>
+  <Accordion title="Module not found: Can't resolve 'fs'">
+    This happens when importing Node.js modules in client-side code. Ensure server-only code is in separate files or use dynamic imports.
+    
+    ```javascript
+    // Use dynamic import with ssr: false
+    const Component = dynamic(() => import('./component'), { ssr: false })
+    ```
+  </Accordion>
+  
+  <Accordion title="Contentlayer build error">
+    Clear the Contentlayer cache and rebuild:
+    
+    ```bash
+    rm -rf .contentlayer
+    npm run build
+    ```
+  </Accordion>
+  
+  <Accordion title="Environment variable not defined">
+    Ensure all required `NEXT_PUBLIC_*` variables are set in your deployment environment. These must be available at build time.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deploy to Vercel" icon="rocket" href="/deployment/vercel">
+    Learn how to deploy your portfolio to Vercel with automatic deployments
+  </Card>
+  
+  <Card title="Environment Setup" icon="gear" href="/quickstart">
+    Configure your local development environment
+  </Card>
+</CardGroup>

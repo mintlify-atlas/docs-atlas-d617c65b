@@ -1,0 +1,521 @@
+---
+title: 'Layouts'
+description: 'Page layout components for different content types'
+icon: 'layer-group'
+---
+
+## Layout System
+
+Layouts are specialized components that wrap page content and provide consistent structure for different content types. All layouts are located in the `layouts/` directory.
+
+## Available Layouts
+
+<CardGroup cols={2}>
+  <Card title="PostLayout" icon="newspaper">
+    Full-featured blog post layout with author info and navigation
+  </Card>
+  <Card title="PostSimple" icon="file-lines">
+    Simplified blog post layout
+  </Card>
+  <Card title="PostBanner" icon="image">
+    Blog post with hero banner image
+  </Card>
+  <Card title="ListLayoutWithTags" icon="tags">
+    Blog listing with sidebar tag filtering
+  </Card>
+  <Card title="ListLayout" icon="list">
+    Simple blog listing layout
+  </Card>
+  <Card title="AuthorLayout" icon="user">
+    Author profile and bio layout
+  </Card>
+</CardGroup>
+
+## PostLayout
+
+The default blog post layout with full features including author info, tags, comments, and post navigation.
+
+**Location**: `layouts/PostLayout.tsx`
+
+### Interface
+
+```tsx
+interface LayoutProps {
+  content: CoreContent<Blog>
+  authorDetails: CoreContent<Authors>[]
+  next?: { path: string; title: string }
+  prev?: { path: string; title: string }
+  children: ReactNode
+}
+```
+
+### Features
+
+<Tabs>
+  <Tab title="Header Section">
+    ```tsx
+    <header className="pt-6 xl:pb-6">
+      <div className="space-y-1 text-center">
+        <dl className="space-y-10">
+          <div>
+            <dt className="sr-only">Published on</dt>
+            <dd className="text-base font-medium text-gray-500">
+              <time dateTime={date}>
+                {new Date(date).toLocaleDateString(siteMetadata.locale)}
+              </time>
+            </dd>
+          </div>
+        </dl>
+        <div>
+          <PageTitle>{title}</PageTitle>
+        </div>
+      </div>
+    </header>
+    ```
+    
+    Displays:
+    - Publication date
+    - Post title
+    - Centered alignment
+  </Tab>
+  
+  <Tab title="Author Sidebar">
+    ```tsx
+    <dl className="pb-10 pt-6 xl:border-b xl:border-gray-200">
+      <dt className="sr-only">Authors</dt>
+      <dd>
+        <ul className="flex flex-wrap justify-center xl:block">
+          {authorDetails.map((author) => (
+            <li className="flex items-center space-x-2" key={author.name}>
+              {author.avatar && (
+                <Image
+                  src={author.avatar}
+                  width={38}
+                  height={38}
+                  alt="avatar"
+                  className="h-10 w-10 rounded-full"
+                />
+              )}
+              <dl className="whitespace-nowrap text-sm">
+                <dd className="text-gray-900 dark:text-gray-100">
+                  {author.name}
+                </dd>
+                <dd>
+                  {author.twitter && (
+                    <Link href={author.twitter}>
+                      {author.twitter.replace('https://twitter.com/', '@')}
+                    </Link>
+                  )}
+                </dd>
+              </dl>
+            </li>
+          ))}
+        </ul>
+      </dd>
+    </dl>
+    ```
+    
+    Features:
+    - Author avatar
+    - Author name
+    - Twitter handle link
+    - Multiple author support
+  </Tab>
+  
+  <Tab title="Content Area">
+    ```tsx
+    <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      <div className="prose max-w-none pb-8 pt-10 dark:prose-invert">
+        {children}
+      </div>
+      <div className="pb-6 pt-6 text-sm">
+        <Link href={discussUrl(path)}>Discuss on Twitter</Link>
+        {` • `}
+        <Link href={editUrl(filePath)}>View on GitHub</Link>
+      </div>
+      {siteMetadata.comments && (
+        <div className="pb-6 pt-6" id="comment">
+          <Comments slug={slug} />
+        </div>
+      )}
+    </div>
+    ```
+    
+    Includes:
+    - MDX content rendering
+    - Social sharing links
+    - GitHub edit link
+    - Comments section
+  </Tab>
+  
+  <Tab title="Footer">
+    ```tsx
+    <footer>
+      <div className="divide-gray-200 dark:divide-gray-700">
+        {tags && (
+          <div className="py-4 xl:py-8">
+            <h2 className="text-xs uppercase">Tags</h2>
+            <div className="flex flex-wrap">
+              {tags.map((tag) => <Tag key={tag} text={tag} />)}
+            </div>
+          </div>
+        )}
+        {(next || prev) && (
+          <div className="flex justify-between py-4">
+            {prev && (
+              <div>
+                <h2 className="text-xs uppercase">Previous Article</h2>
+                <Link href={`/${prev.path}`}>{prev.title}</Link>
+              </div>
+            )}
+            {next && (
+              <div>
+                <h2 className="text-xs uppercase">Next Article</h2>
+                <Link href={`/${next.path}`}>{next.title}</Link>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      <Link href="/blog">&larr; Back to the blog</Link>
+    </footer>
+    ```
+    
+    Features:
+    - Tag list
+    - Previous/Next navigation
+    - Back to blog link
+  </Tab>
+</Tabs>
+
+### Usage
+
+Specify in blog post frontmatter:
+
+```yaml
+---
+title: 'My Blog Post'
+layout: PostLayout
+---
+```
+
+## ListLayoutWithTags
+
+Blog listing page with sidebar tag filtering.
+
+**Location**: `layouts/ListLayoutWithTags.tsx`
+
+### Interface
+
+```tsx
+interface ListLayoutProps {
+  posts: CoreContent<Blog>[]
+  title: string
+  initialDisplayPosts?: CoreContent<Blog>[]
+  pagination?: PaginationProps
+}
+
+interface PaginationProps {
+  totalPages: number
+  currentPage: number
+}
+```
+
+### Features
+
+<CardGroup cols={2}>
+  <Card title="Tag Sidebar" icon="sidebar">
+    Sticky sidebar with all tags and post counts
+  </Card>
+  <Card title="Post List" icon="list">
+    Chronological list of blog posts with summaries
+  </Card>
+  <Card title="Pagination" icon="arrows-left-right">
+    Previous/Next navigation for large post lists
+  </Card>
+  <Card title="Active Filter" icon="filter">
+    Highlights currently selected tag
+  </Card>
+</CardGroup>
+
+### Component Structure
+
+```tsx
+export default function ListLayoutWithTags({
+  posts,
+  title,
+  initialDisplayPosts = [],
+  pagination,
+}: ListLayoutProps) {
+  const pathname = usePathname()
+  const tagCounts = tagData as Record<string, number>
+  const sortedTags = Object.keys(tagCounts).sort((a, b) => 
+    tagCounts[b] - tagCounts[a]
+  )
+
+  return (
+    <div className="flex sm:space-x-24">
+      {/* Tag Sidebar */}
+      <div className="hidden sm:flex min-w-[280px] max-w-[280px]">
+        <div className="px-6 py-4">
+          {pathname.startsWith('/blog') ? (
+            <h3 className="font-bold uppercase text-primary-500">
+              All Posts
+            </h3>
+          ) : (
+            <Link href="/blog">All Posts</Link>
+          )}
+          <ul>
+            {sortedTags.map((t) => (
+              <li key={t} className="my-3">
+                <Link href={`/tags/${slug(t)}`}>
+                  {`${t} (${tagCounts[t]})`}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      
+      {/* Post List */}
+      <div>
+        <ul>
+          {displayPosts.map((post) => (
+            <li key={post.path} className="py-5">
+              <article>
+                <time dateTime={post.date}>
+                  {formatDate(post.date)}
+                </time>
+                <h2>{post.title}</h2>
+                <div>{post.tags?.map((tag) => <Tag text={tag} />)}</div>
+                <p>{post.summary}</p>
+              </article>
+            </li>
+          ))}
+        </ul>
+        {pagination && <Pagination {...pagination} />}
+      </div>
+    </div>
+  )
+}
+```
+
+## AuthorLayout
+
+Layout for author profile pages.
+
+**Location**: `layouts/AuthorLayout.tsx`
+
+### Interface
+
+```tsx
+interface Props {
+  children: ReactNode
+  content: Omit<Authors, '_id' | '_raw' | 'body'>
+}
+```
+
+### Structure
+
+```tsx
+export default function AuthorLayout({ children, content }: Props) {
+  const { name, avatar, occupation, company, email, twitter, linkedin, github } = content
+
+  return (
+    <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      <div className="space-y-2 pb-8 pt-6">
+        <h1 className="text-3xl font-extrabold">About</h1>
+      </div>
+      <div className="items-start xl:grid xl:grid-cols-3 xl:gap-x-8">
+        {/* Avatar Column */}
+        <div className="flex flex-col items-center pt-8">
+          <Image
+            src={avatar}
+            alt="avatar"
+            width={192}
+            height={192}
+            className="h-48 w-48 rounded-full"
+          />
+          <h3 className="pb-2 pt-4 text-2xl font-bold">{name}</h3>
+          <div className="text-gray-500">{occupation}</div>
+          <div className="text-gray-500">{company}</div>
+          <div className="flex space-x-3 pt-6">
+            <SocialIcon kind="mail" href={`mailto:${email}`} />
+            <SocialIcon kind="github" href={github} />
+            <SocialIcon kind="linkedin" href={linkedin} />
+            <SocialIcon kind="twitter" href={twitter} />
+          </div>
+        </div>
+        
+        {/* Bio Content */}
+        <div className="prose max-w-none pb-8 pt-8 dark:prose-invert xl:col-span-2">
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+**Features**:
+- Profile avatar
+- Name, occupation, company
+- Social media links
+- Bio content from MDX
+
+## PostSimple & PostBanner
+
+Alternative blog post layouts for different visual styles.
+
+**Locations**: 
+- `layouts/PostSimple.tsx`
+- `layouts/PostBanner.tsx`
+
+<Tabs>
+  <Tab title="PostSimple">
+    Minimal blog post layout without author sidebar:
+    
+    - Centered content
+    - No author info
+    - Simple header
+    - Tags at bottom
+    - Previous/Next navigation
+    
+    Best for: Single-author blogs or minimal aesthetic
+  </Tab>
+  
+  <Tab title="PostBanner">
+    Blog post with hero banner image:
+    
+    - Full-width hero image
+    - Title overlay on image
+    - Author info below banner
+    - Similar footer to PostLayout
+    
+    Best for: Visual content, photography, case studies
+  </Tab>
+</Tabs>
+
+## Layout Selection
+
+### In Blog Posts
+
+Specify layout in frontmatter:
+
+```yaml
+---
+title: 'My Post'
+date: '2024-03-08'
+layout: PostLayout  # or PostSimple, PostBanner
+---
+```
+
+### Default Layout
+
+If no layout specified, defaults to `PostLayout`.
+
+### In Dynamic Pages
+
+```tsx
+// app/blog/[...slug]/page.tsx
+import { PostLayout, PostSimple, PostBanner } from '@/layouts'
+
+const layouts = {
+  PostLayout,
+  PostSimple,
+  PostBanner,
+}
+
+export default async function Page({ params }) {
+  const post = allBlogs.find((p) => p.slug === params.slug.join('/'))
+  const Layout = layouts[post.layout || 'PostLayout']
+  
+  return <Layout content={post}>{post.body.code}</Layout>
+}
+```
+
+## Creating Custom Layouts
+
+<Steps>
+  <Step title="Create Layout File">
+    Create new layout in `layouts/` directory:
+    
+    ```tsx
+    // layouts/MyCustomLayout.tsx
+    import { ReactNode } from 'react'
+    import { CoreContent } from 'pliny/utils/contentlayer'
+    import type { Blog } from 'contentlayer/generated'
+    
+    interface LayoutProps {
+      content: CoreContent<Blog>
+      children: ReactNode
+    }
+    
+    export default function MyCustomLayout({ content, children }: LayoutProps) {
+      const { title, date } = content
+      
+      return (
+        <article>
+          <header>
+            <h1>{title}</h1>
+            <time>{date}</time>
+          </header>
+          <div>{children}</div>
+        </article>
+      )
+    }
+    ```
+  </Step>
+  
+  <Step title="Export from Index">
+    Add to layout exports (if using index file):
+    
+    ```tsx
+    // layouts/index.tsx
+    export { default as MyCustomLayout } from './MyCustomLayout'
+    ```
+  </Step>
+  
+  <Step title="Use in Posts">
+    Reference in blog post frontmatter:
+    
+    ```yaml
+    ---
+    title: 'Test Post'
+    layout: MyCustomLayout
+    ---
+    ```
+  </Step>
+</Steps>
+
+## Layout Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Semantic HTML" icon="code">
+    Use proper semantic elements (`<article>`, `<header>`, `<footer>`)
+  </Card>
+  <Card title="Responsive Design" icon="mobile">
+    Test layouts on mobile, tablet, and desktop
+  </Card>
+  <Card title="Type Safety" icon="shield">
+    Use TypeScript interfaces for props
+  </Card>
+  <Card title="Accessibility" icon="universal-access">
+    Include ARIA labels and semantic structure
+  </Card>
+</CardGroup>
+
+<Note>
+**Reading Time**: All blog post layouts automatically include reading time calculation from the `readingTime` computed field in Contentlayer.
+</Note>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Content Management" icon="file-code" href="/structure/content">
+    Learn about Contentlayer and MDX
+  </Card>
+  <Card title="Writing Content" icon="pen" href="/customization/content-management">
+    Start writing blog posts
+  </Card>
+</CardGroup>

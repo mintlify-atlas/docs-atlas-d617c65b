@@ -1,0 +1,276 @@
+---
+title: 'Project Overview'
+description: 'Understanding the architecture and structure of Maymoun Portfolio'
+icon: 'folder-tree'
+---
+
+## Architecture Overview
+
+Maymoun's Portfolio is built with **Next.js 13** using the App Router architecture, featuring a modern tech blog with MDX content management through Contentlayer.
+
+<CardGroup cols={2}>
+  <Card title="Framework" icon="react">
+    Next.js 13.5.6 with App Router and React Server Components
+  </Card>
+  <Card title="Styling" icon="palette">
+    Tailwind CSS with custom theming and dark mode support
+  </Card>
+  <Card title="Content" icon="file-lines">
+    Contentlayer for type-safe MDX processing
+  </Card>
+  <Card title="TypeScript" icon="code">
+    Full TypeScript support across the codebase
+  </Card>
+</CardGroup>
+
+## Directory Structure
+
+```plaintext
+source/
+├── app/                    # Next.js App Router pages
+│   ├── layout.tsx          # Root layout with providers
+│   ├── page.tsx            # Home page
+│   ├── blog/               # Blog routes
+│   │   ├── page.tsx        # Blog listing
+│   │   ├── [page]/         # Paginated blog
+│   │   └── [...slug]/      # Dynamic blog posts
+│   ├── tags/               # Tag filtering
+│   ├── about/              # About page
+│   ├── contact/            # Contact page
+│   └── api/                # API routes
+│       └── newsletter/     # Newsletter subscription
+├── components/             # Reusable React components
+│   ├── Header.tsx
+│   ├── Footer.tsx
+│   ├── Card.tsx
+│   ├── Link.tsx
+│   ├── Image.tsx
+│   └── ...
+├── layouts/                # Page layout components
+│   ├── PostLayout.tsx
+│   ├── AuthorLayout.tsx
+│   ├── ListLayoutWithTags.tsx
+│   └── ...
+├── data/                   # Content and configuration
+│   ├── blog/               # Blog post MDX files
+│   ├── authors/            # Author profile MDX files
+│   ├── siteMetadata.js     # Site configuration
+│   └── headerNavLinks.ts   # Navigation links
+├── css/                    # Global styles
+│   ├── tailwind.css
+│   └── prism.css           # Code syntax highlighting
+├── public/                 # Static assets
+├── contentlayer.config.ts  # Contentlayer configuration
+├── next.config.js          # Next.js configuration
+├── tailwind.config.js      # Tailwind configuration
+└── tsconfig.json           # TypeScript configuration
+```
+
+## Next.js App Router Setup
+
+The application uses Next.js 13's App Router with the following structure:
+
+### Root Layout
+
+The main layout (`app/layout.tsx`) wraps all pages:
+
+```tsx
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang={siteMetadata.language} suppressHydrationWarning>
+      <body>
+        <ThemeProviders>
+          <Analytics analyticsConfig={siteMetadata.analytics} />
+          <SectionContainer>
+            <div className="flex h-screen flex-col justify-between">
+              <SearchProvider searchConfig={siteMetadata.search}>
+                <Header />
+                <main className="mb-auto">{children}</main>
+              </SearchProvider>
+              <Footer />
+            </div>
+          </SectionContainer>
+        </ThemeProviders>
+      </body>
+    </html>
+  )
+}
+```
+
+### Route Organization
+
+<Tabs>
+  <Tab title="Blog Routes">
+    - `/blog` - Blog listing page with tags sidebar
+    - `/blog/page/[page]` - Paginated blog posts
+    - `/blog/[...slug]` - Individual blog post pages
+    
+    Dynamic route example:
+    ```tsx
+    // app/blog/[...slug]/page.tsx
+    export async function generateStaticParams() {
+      return allBlogs.map((post) => ({
+        slug: post.slug.split('/')
+      }))
+    }
+    ```
+  </Tab>
+  
+  <Tab title="Tag Routes">
+    - `/tags` - All tags overview
+    - `/tags/[tag]` - Posts filtered by tag
+    
+    Automatic tag generation from blog posts using `github-slugger`.
+  </Tab>
+  
+  <Tab title="Static Routes">
+    - `/` - Home page
+    - `/about` - About page with author layout
+    - `/contact` - Contact page
+    - `/books` - Books page
+  </Tab>
+  
+  <Tab title="API Routes">
+    - `/api/newsletter` - Newsletter subscription endpoint
+    
+    Server-side API handling with Next.js Route Handlers.
+  </Tab>
+</Tabs>
+
+## Key Configuration Files
+
+### next.config.js
+
+Configures Next.js with Contentlayer integration, security headers, and image domains:
+
+```javascript
+const { withContentlayer } = require('next-contentlayer')
+
+module.exports = () => {
+  const plugins = [withContentlayer, withBundleAnalyzer]
+  return plugins.reduce((acc, next) => next(acc), {
+    reactStrictMode: true,
+    pageExtensions: ['ts', 'tsx', 'js', 'jsx', 'md', 'mdx'],
+    images: {
+      domains: ['picsum.photos'],
+    },
+    // ... security headers and webpack config
+  })
+}
+```
+
+### tsconfig.json
+
+TypeScript configuration with path aliases:
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/components/*": ["components/*"],
+      "@/data/*": ["data/*"],
+      "@/layouts/*": ["layouts/*"]
+    }
+  }
+}
+```
+
+### siteMetadata.js
+
+Centralized site configuration located in `data/siteMetadata.js`:
+
+<Accordion title="View Complete Site Metadata">
+```javascript
+const siteMetadata = {
+  title: 'Tech Blog',
+  author: 'EL-FAHIM Maymoun',
+  headerTitle: 'TechBlog',
+  description: 'A blog to publish some articles and introduce who i am',
+  language: 'en-us',
+  theme: 'system',
+  siteUrl: 'https://melfahim-portfolio.vercel.app/',
+  siteRepo: 'https://github.com/Amalou99/melfahim-portfolio',
+  email: 'elfahim.maymoun99@gmail.com',
+  github: 'https://github.com/Amalou99',
+  twitter: 'https://twitter.com/Amalou88188197',
+  linkedin: 'https://linkedin.com/in/maymoun-elfahim',
+  locale: 'en-US',
+  analytics: { /* ... */ },
+  newsletter: { provider: 'buttondown' },
+  comments: { provider: 'giscus' },
+  search: { provider: 'kbar' },
+}
+```
+</Accordion>
+
+## Build Process
+
+<Steps>
+  <Step title="Content Processing">
+    Contentlayer processes MDX files from `data/blog/` and `data/authors/` into type-safe data
+  </Step>
+  
+  <Step title="Tag Generation">
+    Build script generates `tag-data.json` with tag counts for filtering
+  </Step>
+  
+  <Step title="Search Index">
+    Creates `search.json` for client-side search with kbar
+  </Step>
+  
+  <Step title="Static Generation">
+    Next.js generates static pages for all blog posts and routes
+  </Step>
+</Steps>
+
+<Note>
+**Development Command**: `yarn dev` or `npm run dev`
+
+**Build Command**: `yarn build` or `npm run build`
+
+The build process includes Contentlayer compilation and post-build scripts.
+</Note>
+
+## Environment Variables
+
+Required environment variables (see `.env.example`):
+
+```bash
+# Analytics
+NEXT_UMAMI_ID=your-umami-id
+
+# Comments (Giscus)
+NEXT_PUBLIC_GISCUS_REPO=
+NEXT_PUBLIC_GISCUS_REPOSITORY_ID=
+NEXT_PUBLIC_GISCUS_CATEGORY=
+NEXT_PUBLIC_GISCUS_CATEGORY_ID=
+
+# Newsletter
+BUTTONDOWN_API_KEY=
+```
+
+## Performance Features
+
+- **Static Site Generation (SSG)** - Pre-rendered pages at build time
+- **Image Optimization** - Next.js Image component with automatic optimization
+- **Code Splitting** - Automatic route-based code splitting
+- **CSS Optimization** - Tailwind CSS with PurgeCSS for minimal bundle size
+- **Bundle Analysis** - Optional bundle analyzer with `ANALYZE=true`
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Components" icon="cube" href="/structure/components">
+    Explore reusable React components
+  </Card>
+  <Card title="Layouts" icon="layer-group" href="/structure/layouts">
+    Learn about layout components
+  </Card>
+  <Card title="Content" icon="file-code" href="/structure/content">
+    Understand content management
+  </Card>
+  <Card title="Configuration" icon="gear" href="/customization/configuration">
+    Configure your site
+  </Card>
+</CardGroup>

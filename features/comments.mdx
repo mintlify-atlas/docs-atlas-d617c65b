@@ -1,0 +1,448 @@
+---
+title: 'Comments System'
+description: 'Learn how the Giscus comments integration works with GitHub Discussions'
+icon: 'comments'
+---
+
+## Overview
+
+The portfolio uses **Giscus** for blog post comments, a comments system powered by GitHub Discussions. This provides a privacy-friendly, ad-free commenting experience.
+
+<Info>
+Giscus is free, open-source, and stores all comments in your GitHub repository's Discussions, giving you full ownership of the data.
+</Info>
+
+## Comments Configuration
+
+Comments are configured in `data/siteMetadata.js`:
+
+```javascript data/siteMetadata.js
+const siteMetadata = {
+  // ...
+  comments: {
+    provider: 'giscus', // supported providers: giscus, utterances, disqus
+    giscusConfig: {
+      repo: process.env.NEXT_PUBLIC_GISCUS_REPO,
+      repositoryId: process.env.NEXT_PUBLIC_GISCUS_REPOSITORY_ID,
+      category: process.env.NEXT_PUBLIC_GISCUS_CATEGORY,
+      categoryId: process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID,
+      mapping: 'pathname', // supported options: pathname, url, title
+      reactions: '1', // Emoji reactions: 1 = enable / 0 = disable
+      metadata: '0', // Send discussion metadata periodically: 1 = enable / 0 = disable
+      theme: 'light',
+      darkTheme: 'transparent_dark',
+      themeURL: '', // Custom theme CSS URL
+      lang: 'en',
+    },
+  },
+}
+
+module.exports = siteMetadata
+```
+
+### Configuration Options
+
+<AccordionGroup>
+  <Accordion title="repo">
+    GitHub repository in format `username/repo-name`
+  </Accordion>
+  
+  <Accordion title="repositoryId">
+    The unique GitHub repository ID (obtained from giscus.app)
+  </Accordion>
+  
+  <Accordion title="category">
+    The Discussion category name (e.g., "Announcements", "General")
+  </Accordion>
+  
+  <Accordion title="categoryId">
+    The unique category ID (obtained from giscus.app)
+  </Accordion>
+  
+  <Accordion title="mapping">
+    How to map blog posts to discussions:
+    - `pathname`: Use the URL path (recommended)
+    - `url`: Use the full URL
+    - `title`: Use the page title
+  </Accordion>
+  
+  <Accordion title="reactions">
+    Enable/disable emoji reactions on comments
+  </Accordion>
+  
+  <Accordion title="theme">
+    Theme for light mode (e.g., 'light', 'light_high_contrast')
+  </Accordion>
+  
+  <Accordion title="darkTheme">
+    Theme for dark mode (e.g., 'dark', 'transparent_dark')
+  </Accordion>
+</AccordionGroup>
+
+## Environment Variables
+
+Add these variables to your `.env.local` file:
+
+```bash .env.local
+NEXT_PUBLIC_GISCUS_REPO=username/repo-name
+NEXT_PUBLIC_GISCUS_REPOSITORY_ID=R_kgDOH...
+NEXT_PUBLIC_GISCUS_CATEGORY=Announcements
+NEXT_PUBLIC_GISCUS_CATEGORY_ID=DIC_kwDOH...
+```
+
+<Note>
+The `NEXT_PUBLIC_` prefix makes these variables available in the browser, which is required for Giscus to work.
+</Note>
+
+## Setting Up Giscus
+
+<Steps>
+  <Step title="Enable GitHub Discussions">
+    1. Go to your repository on GitHub
+    2. Click **Settings** → **Features**
+    3. Check **Discussions** to enable it
+    4. Create a category for blog comments (e.g., "Blog Comments")
+  </Step>
+  
+  <Step title="Configure Giscus">
+    1. Visit [giscus.app](https://giscus.app)
+    2. Enter your repository name (e.g., `Amalou99/melfahim-portfolio`)
+    3. Select the Discussion category you created
+    4. Choose mapping option (recommend `pathname`)
+    5. Select features (reactions, lazy loading, etc.)
+  </Step>
+  
+  <Step title="Copy Configuration">
+    Giscus will generate configuration values:
+    - Repository ID
+    - Category ID
+    - Theme options
+    
+    Copy these to your `.env.local` file
+  </Step>
+  
+  <Step title="Install Giscus App">
+    1. Go to [GitHub Apps → Giscus](https://github.com/apps/giscus)
+    2. Click **Install**
+    3. Select your repository
+    4. Grant the necessary permissions
+  </Step>
+</Steps>
+
+<Warning>
+Make sure your repository is public. Giscus requires public repositories to work properly.
+</Warning>
+
+## Comments Component
+
+The comments component is implemented in `components/Comments.tsx`:
+
+```typescript components/Comments.tsx
+'use client'
+
+import { Comments as CommentsComponent } from 'pliny/comments'
+import { useState } from 'react'
+import siteMetadata from '@/data/siteMetadata'
+
+export default function Comments({ slug }: { slug: string }) {
+  const [loadComments, setLoadComments] = useState(false)
+  
+  return (
+    <>
+      {!loadComments && (
+        <button onClick={() => setLoadComments(true)}>
+          Load Comments
+        </button>
+      )}
+      {siteMetadata.comments && loadComments && (
+        <CommentsComponent commentsConfig={siteMetadata.comments} slug={slug} />
+      )}
+    </>
+  )
+}
+```
+
+### Key Features
+
+<Steps>
+  <Step title="Lazy Loading">
+    Comments are only loaded when the user clicks "Load Comments", improving initial page load performance
+  </Step>
+  
+  <Step title="Client-Side Only">
+    Uses `'use client'` directive since Giscus requires browser APIs
+  </Step>
+  
+  <Step title="Configuration from Metadata">
+    Automatically uses the configuration from `siteMetadata.comments`
+  </Step>
+  
+  <Step title="Slug-Based Mapping">
+    Uses the blog post slug to map to the correct GitHub Discussion
+  </Step>
+</Steps>
+
+## Using Comments in Blog Posts
+
+Add the Comments component to your blog post layout:
+
+```tsx app/blog/[slug]/layout.tsx
+import Comments from '@/components/Comments'
+
+export default function BlogPostLayout({ params, children }) {
+  return (
+    <article>
+      <header>
+        <h1>{/* Post title */}</h1>
+      </header>
+      
+      <div className="prose">
+        {children}
+      </div>
+      
+      {/* Comments section */}
+      <div className="mt-8">
+        <Comments slug={params.slug} />
+      </div>
+    </article>
+  )
+}
+```
+
+## Theme Integration
+
+Giscus automatically adapts to your site's theme:
+
+```javascript
+giscusConfig: {
+  theme: 'light',           // Light mode theme
+  darkTheme: 'transparent_dark',  // Dark mode theme
+}
+```
+
+### Available Themes
+
+<Tabs>
+  <Tab title="Light Themes">
+    - `light` - Default light theme
+    - `light_high_contrast` - High contrast light
+    - `light_protanopia` - Colorblind-friendly light
+    - `light_tritanopia` - Colorblind-friendly light
+  </Tab>
+  
+  <Tab title="Dark Themes">
+    - `dark` - Default dark theme
+    - `dark_high_contrast` - High contrast dark
+    - `dark_dimmed` - Dimmed dark theme
+    - `transparent_dark` - Transparent dark (recommended)
+    - `dark_protanopia` - Colorblind-friendly dark
+    - `dark_tritanopia` - Colorblind-friendly dark
+  </Tab>
+  
+  <Tab title="Custom Theme">
+    ```javascript
+    giscusConfig: {
+      theme: 'custom',
+      themeURL: 'https://example.com/custom-theme.css',
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Info>
+The `transparent_dark` theme is recommended for dark mode as it adapts to your site's background color.
+</Info>
+
+## Comment Mapping Options
+
+Choose how blog posts map to GitHub Discussions:
+
+<CardGroup cols={3}>
+  <Card title="pathname" icon="route">
+    Maps using URL path
+    
+    **Recommended**: Stable even if you change titles
+  </Card>
+  <Card title="url" icon="link">
+    Maps using full URL
+    
+    Breaks if domain changes
+  </Card>
+  <Card title="title" icon="heading">
+    Maps using page title
+    
+    Breaks if you rename posts
+  </Card>
+</CardGroup>
+
+```javascript
+// Example mappings for the same post:
+
+// pathname: '/blog/meet-kafka'
+mapping: 'pathname'
+
+// url: 'https://melfahim-portfolio.vercel.app/blog/meet-kafka'
+mapping: 'url'
+
+// title: 'Meet Kafka'
+mapping: 'title'
+```
+
+## Features
+
+### Emoji Reactions
+
+Enable reactions on comments:
+
+```javascript
+reactions: '1'  // 1 = enabled, 0 = disabled
+```
+
+Users can react with emojis: 👍 👎 😄 🎉 😕 ❤️ 🚀 👀
+
+### Markdown Support
+
+Giscus supports full GitHub Flavored Markdown:
+
+- **Bold** and *italic* text
+- `Code` and code blocks
+- [Links](https://example.com)
+- Images
+- Lists
+- Blockquotes
+- Tables
+
+### Comment Sorting
+
+Comments can be sorted by:
+- **Oldest first** (default)
+- **Newest first**
+- **Top** (most reactions)
+
+### User Authentication
+
+Users must sign in with GitHub to comment. This:
+- Prevents spam
+- Reduces moderation burden
+- Ensures accountability
+- Integrates with GitHub's moderation tools
+
+## Moderation
+
+Manage comments directly in GitHub Discussions:
+
+<Steps>
+  <Step title="View Comments">
+    Navigate to your repository → Discussions → Blog Comments category
+  </Step>
+  
+  <Step title="Moderate">
+    Use GitHub's moderation tools:
+    - Edit comments
+    - Delete spam
+    - Lock discussions
+    - Hide comments
+    - Block users
+  </Step>
+  
+  <Step title="Receive Notifications">
+    Get email notifications for new comments (configurable in GitHub settings)
+  </Step>
+</Steps>
+
+## Alternative Providers
+
+The portfolio supports other comment systems:
+
+<Tabs>
+  <Tab title="Utterances">
+    ```javascript data/siteMetadata.js
+    comments: {
+      provider: 'utterances',
+      utterancesConfig: {
+        repo: 'username/repo',
+        issueTerm: 'pathname',
+        label: 'comment',
+        theme: 'github-light',
+        darkTheme: 'github-dark',
+      },
+    }
+    ```
+    
+    Uses GitHub Issues instead of Discussions
+  </Tab>
+  
+  <Tab title="Disqus">
+    ```javascript data/siteMetadata.js
+    comments: {
+      provider: 'disqus',
+      disqusConfig: {
+        shortname: process.env.NEXT_PUBLIC_DISQUS_SHORTNAME,
+      },
+    }
+    ```
+    
+    Traditional hosted comments (has ads on free plan)
+  </Tab>
+</Tabs>
+
+## Privacy & Security
+
+<CardGroup cols={2}>
+  <Card title="No Tracking" icon="shield-halved">
+    Giscus doesn't track users or collect analytics
+  </Card>
+  <Card title="Open Source" icon="code">
+    Fully open-source and auditable code
+  </Card>
+  <Card title="GitHub Authentication" icon="github">
+    Uses GitHub's secure OAuth for authentication
+  </Card>
+  <Card title="Data Ownership" icon="database">
+    All comments are stored in your repository
+  </Card>
+</CardGroup>
+
+<Info>
+Since comments are stored as GitHub Discussions, you can export them anytime and migrate to another platform if needed.
+</Info>
+
+## Troubleshooting
+
+### Comments Not Loading
+
+<Steps>
+  <Step title="Check Environment Variables">
+    Verify all `NEXT_PUBLIC_GISCUS_*` variables are set correctly
+  </Step>
+  
+  <Step title="Verify Repository Settings">
+    - Repository is public
+    - Discussions are enabled
+    - Giscus app is installed
+  </Step>
+  
+  <Step title="Check Category">
+    The Discussion category exists and matches your configuration
+  </Step>
+  
+  <Step title="Test on Production">
+    Giscus may not work on localhost - test on your deployed site
+  </Step>
+</Steps>
+
+### Wrong Discussion Thread
+
+- Verify the `mapping` option matches how you want posts mapped
+- Check that the slug/pathname/title is correct
+- Manually link the discussion in GitHub if needed
+
+### Theme Not Updating
+
+- Clear browser cache
+- Verify `theme` and `darkTheme` are set correctly
+- Check that next-themes is working properly
+
+<Warning>
+If you change the `mapping` option after users have already commented, existing comments will be orphaned. Choose your mapping strategy carefully from the start.
+</Warning>

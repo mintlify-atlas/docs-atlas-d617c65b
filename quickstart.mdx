@@ -1,80 +1,305 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: 'Quickstart'
+description: 'Get your portfolio up and running in minutes'
+icon: 'rocket'
 ---
 
-## Get started in three steps
+Get started with Maymoun's Portfolio by following this step-by-step guide. You'll have a fully functional Next.js blog and portfolio running locally in just a few minutes.
 
-Get your documentation site running locally and make your first customization.
+## Prerequisites
 
-### Step 1: Set up your local environment
+Before you begin, ensure you have the following installed:
+- Node.js 16.x or higher
+- Yarn 3.6.1 or higher (recommended) or npm/pnpm
+
+## Installation
+
+<Steps>
+  <Step title="Clone the repository">
+    First, clone the repository to your local machine:
+
+    ```bash
+    git clone https://github.com/Amalou99/melfahim-portfolio.git
+    cd melfahim-portfolio
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    Install all required packages using your preferred package manager:
+
+    <CodeGroup>
+      ```bash yarn
+      yarn
+      ```
+
+      ```bash npm
+      npm install
+      ```
+
+      ```bash pnpm
+      pnpm install
+      ```
+    </CodeGroup>
+
+    <Note>
+      This project uses Yarn 3.6.1 as specified in `package.json`. If you're using Yarn, the correct version will be automatically used.
+    </Note>
+  </Step>
+
+  <Step title="Configure environment variables">
+    Copy the example environment file and configure it for your needs:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    The `.env` file contains optional configurations for:
+
+    ```bash .env
+    # Comment system (Giscus, Utterances, or Disqus)
+    NEXT_PUBLIC_GISCUS_REPO=
+    NEXT_PUBLIC_GISCUS_REPOSITORY_ID=
+    NEXT_PUBLIC_GISCUS_CATEGORY=
+    NEXT_PUBLIC_GISCUS_CATEGORY_ID=
+    NEXT_PUBLIC_UTTERANCES_REPO=
+    NEXT_PUBLIC_DISQUS_SHORTNAME=
+
+    # Newsletter providers
+    MAILCHIMP_API_KEY=
+    MAILCHIMP_API_SERVER=
+    MAILCHIMP_AUDIENCE_ID=
+    BUTTONDOWN_API_KEY=
+    CONVERTKIT_API_KEY=
+    CONVERTKIT_FORM_ID=
+    KLAVIYO_API_KEY=
+    KLAVIYO_LIST_ID=
+    REVUE_API_KEY=
+    EMAILOCTOPUS_API_KEY=
+    EMAILOCTOPUS_LIST_ID=
+
+    # Analytics
+    NEXT_UMAMI_ID=
+    ```
+
+    <Warning>
+      All environment variables are optional. The site will run without them, but features like comments and newsletter subscriptions won't work until configured.
+    </Warning>
+  </Step>
+
+  <Step title="Start the development server">
+    Run the development server:
+
+    <CodeGroup>
+      ```bash yarn
+      yarn dev
+      ```
+
+      ```bash npm
+      npm run dev
+      ```
+
+      ```bash pnpm
+      pnpm dev
+      ```
+    </CodeGroup>
+
+    The server will start on [http://localhost:3000](http://localhost:3000). Open this URL in your browser to see your portfolio.
+
+    <Note>
+      The `dev` script uses `cross-env` to set the `INIT_CWD` environment variable, ensuring proper path resolution across different operating systems.
+    </Note>
+  </Step>
+</Steps>
+
+## Available Scripts
+
+The project includes several useful scripts defined in `package.json`:
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+  <Accordion title="Development Scripts">
+    ```json package.json
+    {
+      "scripts": {
+        "start": "next dev",
+        "dev": "cross-env INIT_CWD=$PWD next dev"
+      }
+    }
+    ```
+
+    - `yarn dev` - Starts the Next.js development server with hot reloading
+    - `yarn start` - Alternative command to start the development server
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+
+  <Accordion title="Production Scripts">
+    ```json package.json
+    {
+      "scripts": {
+        "build": "CI=false cross-env INIT_CWD=$PWD next build && cross-env NODE_OPTIONS='--experimental-json-modules' node ./scripts/postbuild.mjs",
+        "serve": "next start"
+      }
+    }
+    ```
+
+    - `yarn build` - Creates an optimized production build
+    - `yarn serve` - Starts the production server (run after `yarn build`)
+  </Accordion>
+
+  <Accordion title="Utility Scripts">
+    ```json package.json
+    {
+      "scripts": {
+        "analyze": "cross-env ANALYZE=true next build",
+        "lint": "next lint --fix --dir pages --dir app --dir components --dir lib --dir layouts --dir scripts"
+      }
+    }
+    ```
+
+    - `yarn analyze` - Analyzes the bundle size using @next/bundle-analyzer
+    - `yarn lint` - Runs ESLint and automatically fixes issues
   </Accordion>
 </AccordionGroup>
 
-### Step 2: Deploy your changes
+## Building for Production
+
+To create a production-ready build:
+
+<Steps>
+  <Step title="Create the production build">
+    <CodeGroup>
+      ```bash yarn
+      yarn build
+      ```
+
+      ```bash npm
+      npm run build
+      ```
+
+      ```bash pnpm
+      pnpm build
+      ```
+    </CodeGroup>
+
+    This command:
+    1. Disables CI mode warnings (`CI=false`)
+    2. Builds the Next.js application
+    3. Runs the postbuild script to generate additional assets
+  </Step>
+
+  <Step title="Start the production server">
+    <CodeGroup>
+      ```bash yarn
+      yarn serve
+      ```
+
+      ```bash npm
+      npm run serve
+      ```
+
+      ```bash pnpm
+      pnpm serve
+      ```
+    </CodeGroup>
+
+    Your production site will be available at [http://localhost:3000](http://localhost:3000).
+  </Step>
+</Steps>
+
+## Project Structure
+
+After installation, your project will have the following structure:
+
+```
+melfahim-portfolio/
+├── app/              # Next.js 13+ app directory
+├── components/       # React components
+├── data/             # Site metadata and configuration
+│   └── siteMetadata.js
+├── layouts/          # Page layouts
+├── lib/              # Utility functions and libraries
+├── pages/            # Legacy pages (if any)
+├── public/           # Static assets
+├── scripts/          # Build and utility scripts
+├── .env.example      # Environment variables template
+├── contentlayer.config.ts  # Contentlayer configuration
+├── next.config.js    # Next.js configuration
+├── package.json      # Dependencies and scripts
+└── tailwind.config.js # Tailwind CSS configuration
+```
+
+## Customizing Site Metadata
+
+Edit `data/siteMetadata.js` to customize your portfolio:
+
+```javascript data/siteMetadata.js
+const siteMetadata = {
+  title: 'Tech Blog',
+  author: 'EL-FAHIM Maymoun',
+  headerTitle: 'TechBlog',
+  description: 'A blog to publish some articles and introduce who i am',
+  language: 'en-us',
+  theme: 'system', // system, dark or light
+  siteUrl: 'https://melfahim-portfolio.vercel.app/',
+  siteRepo: 'https://github.com/Amalou99/melfahim-portfolio',
+  email: 'elfahim.maymoun99@gmail.com',
+  github: 'https://github.com/Amalou99',
+  twitter: 'https://twitter.com/Amalou88188197',
+  linkedin: 'https://linkedin.com/in/maymoun-elfahim',
+  locale: 'en-US',
+  // ... more configuration options
+}
+```
+
+<Card title="Next Steps" icon="arrow-right" href="/customization/configuration">
+  Learn how to customize your portfolio's appearance, features, and content
+</Card>
+
+## Troubleshooting
 
 <AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+  <Accordion title="Port 3000 already in use">
+    If port 3000 is already occupied, you can specify a different port:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    ```bash
+    yarn dev -p 3001
+    ```
+  </Accordion>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
+  <Accordion title="Module not found errors">
+    Clear your node_modules and reinstall:
+
+    ```bash
+    rm -rf node_modules yarn.lock
+    yarn install
+    ```
+  </Accordion>
+
+  <Accordion title="Build fails with memory errors">
+    Increase Node.js memory limit:
+
+    ```bash
+    NODE_OPTIONS="--max-old-space-size=4096" yarn build
+    ```
   </Accordion>
 </AccordionGroup>
 
-### Step 3: Go live
+## What's Next?
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+Now that your portfolio is running, explore these guides:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Configuration" icon="gear" href="/customization/configuration">
+    Customize site settings, themes, and features
+  </Card>
+  
+  <Card title="Content Management" icon="file-pen" href="/customization/content-management">
+    Learn how to create and manage blog posts
+  </Card>
+  
+  <Card title="Deployment" icon="cloud-arrow-up" href="/deployment/build">
+    Deploy your portfolio to production
+  </Card>
+  
+  <Card title="Components" icon="puzzle-piece" href="/structure/components">
+    Explore available UI components
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

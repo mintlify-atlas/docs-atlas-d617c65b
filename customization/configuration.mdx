@@ -1,0 +1,429 @@
+---
+title: 'Configuration'
+description: 'Configure site metadata, analytics, comments, and search functionality'
+---
+
+## Overview
+
+Maymoun's Portfolio uses a centralized configuration file to manage all site settings. The main configuration is located in `data/siteMetadata.js` and controls everything from site metadata to analytics, comments, and search providers.
+
+## Site Metadata Configuration
+
+The site metadata defines your portfolio's core information and is configured in `data/siteMetadata.js`.
+
+<Steps>
+  <Step title="Basic Site Information">
+    Configure your site's basic metadata:
+
+    ```javascript data/siteMetadata.js
+    const siteMetadata = {
+      title: 'Tech Blog',
+      author: 'EL-FAHIM Maymoun',
+      headerTitle: 'TechBlog',
+      description: 'A blog to publish some articles and introduce who i am',
+      language: 'en-us',
+      theme: 'system', // system, dark or light
+      siteUrl: 'https://melfahim-portfolio.vercel.app/',
+      siteRepo: 'https://github.com/Amalou99/melfahim-portfolio',
+      siteLogo: '/static/images/sparrowhawk-avatar.jpg',
+      socialBanner: '/static/images/sparrowhawk-avatar.jpg',
+      locale: 'en-US',
+    }
+    ```
+
+    <Note>
+      The `theme` option supports three values:
+      - `'system'` - Automatically follows user's system preference
+      - `'dark'` - Forces dark mode
+      - `'light'` - Forces light mode
+    </Note>
+  </Step>
+
+  <Step title="Social Links">
+    Add your social media profiles:
+
+    ```javascript data/siteMetadata.js
+    const siteMetadata = {
+      // ... other config
+      email: 'elfahim.maymoun99@gmail.com',
+      github: 'https://github.com/Amalou99',
+      twitter: 'https://twitter.com/Amalou88188197',
+      facebook: 'https://facebook.com',
+      youtube: 'https://youtube.com',
+      linkedin: 'https://linkedin.com/in/maymoun-elfahim',
+    }
+    ```
+
+    These social links will appear in your site's footer and author profiles.
+  </Step>
+</Steps>
+
+## Analytics Configuration
+
+The portfolio supports multiple analytics providers through the Pliny configuration system.
+
+### Umami Analytics (Recommended)
+
+Umami is a privacy-focused, open-source analytics platform.
+
+<Steps>
+  <Step title="Configure Umami">
+    ```javascript data/siteMetadata.js
+    const siteMetadata = {
+      analytics: {
+        umamiAnalytics: {
+          umamiWebsiteId: process.env.NEXT_UMAMI_ID,
+        },
+      },
+    }
+    ```
+  </Step>
+
+  <Step title="Add Environment Variable">
+    Create a `.env` file in your project root:
+
+    ```bash .env
+    NEXT_UMAMI_ID=your-umami-website-id
+    ```
+
+    <Warning>
+      Never commit your `.env` file to version control. Add it to `.gitignore`.
+    </Warning>
+  </Step>
+
+  <Step title="Update Content Security Policy">
+    Add Umami to your CSP in `next.config.js`:
+
+    ```javascript next.config.js
+    const ContentSecurityPolicy = `
+      script-src 'self' 'unsafe-eval' 'unsafe-inline' umami.yourdomain.com;
+    `
+    ```
+  </Step>
+</Steps>
+
+### Alternative Analytics Providers
+
+<Accordion title="Google Analytics">
+  ```javascript data/siteMetadata.js
+  const siteMetadata = {
+    analytics: {
+      googleAnalytics: {
+        googleAnalyticsId: 'G-XXXXXXX',
+      },
+    },
+  }
+  ```
+</Accordion>
+
+<Accordion title="Plausible Analytics">
+  ```javascript data/siteMetadata.js
+  const siteMetadata = {
+    analytics: {
+      plausibleAnalytics: {
+        plausibleDataDomain: 'yourdomain.com',
+      },
+    },
+  }
+  ```
+</Accordion>
+
+<Accordion title="Simple Analytics">
+  ```javascript data/siteMetadata.js
+  const siteMetadata = {
+    analytics: {
+      simpleAnalytics: {},
+    },
+  }
+  ```
+</Accordion>
+
+<Accordion title="PostHog Analytics">
+  ```javascript data/siteMetadata.js
+  const siteMetadata = {
+    analytics: {
+      posthogAnalytics: {
+        posthogProjectApiKey: 'your-api-key',
+      },
+    },
+  }
+  ```
+</Accordion>
+
+## Newsletter Configuration
+
+The portfolio supports multiple newsletter providers.
+
+```javascript data/siteMetadata.js
+const siteMetadata = {
+  newsletter: {
+    provider: 'buttondown', // mailchimp, buttondown, convertkit, klaviyo, revue, emailoctopus
+  },
+}
+```
+
+<Tabs>
+  <Tab title="Buttondown">
+    Set up Buttondown newsletter:
+
+    1. Create an account at [Buttondown](https://buttondown.email)
+    2. Add your API key to `.env`:
+       ```bash
+       BUTTONDOWN_API_KEY=your-api-key
+       ```
+    3. Configure in siteMetadata:
+       ```javascript
+       newsletter: {
+         provider: 'buttondown',
+       }
+       ```
+  </Tab>
+
+  <Tab title="Mailchimp">
+    Set up Mailchimp newsletter:
+
+    1. Get your Mailchimp API key and audience ID
+    2. Add to `.env`:
+       ```bash
+       MAILCHIMP_API_KEY=your-api-key
+       MAILCHIMP_AUDIENCE_ID=your-audience-id
+       ```
+    3. Configure in siteMetadata:
+       ```javascript
+       newsletter: {
+         provider: 'mailchimp',
+       }
+       ```
+  </Tab>
+
+  <Tab title="ConvertKit">
+    Set up ConvertKit newsletter:
+
+    1. Get your ConvertKit API key and form ID
+    2. Add to `.env`:
+       ```bash
+       CONVERTKIT_API_KEY=your-api-key
+       CONVERTKIT_FORM_ID=your-form-id
+       ```
+    3. Configure in siteMetadata:
+       ```javascript
+       newsletter: {
+         provider: 'convertkit',
+       }
+       ```
+  </Tab>
+</Tabs>
+
+## Comments Configuration
+
+The portfolio uses Giscus for comments, powered by GitHub Discussions.
+
+<Steps>
+  <Step title="Enable GitHub Discussions">
+    1. Go to your GitHub repository
+    2. Navigate to Settings → Features
+    3. Enable "Discussions"
+  </Step>
+
+  <Step title="Configure Giscus">
+    Visit [giscus.app](https://giscus.app/) and follow the configuration steps to get your repository ID and category ID.
+  </Step>
+
+  <Step title="Add Environment Variables">
+    ```bash .env
+    NEXT_PUBLIC_GISCUS_REPO=username/repo-name
+    NEXT_PUBLIC_GISCUS_REPOSITORY_ID=your-repository-id
+    NEXT_PUBLIC_GISCUS_CATEGORY=Announcements
+    NEXT_PUBLIC_GISCUS_CATEGORY_ID=your-category-id
+    ```
+  </Step>
+
+  <Step title="Configure in siteMetadata">
+    ```javascript data/siteMetadata.js
+    const siteMetadata = {
+      comments: {
+        provider: 'giscus',
+        giscusConfig: {
+          repo: process.env.NEXT_PUBLIC_GISCUS_REPO,
+          repositoryId: process.env.NEXT_PUBLIC_GISCUS_REPOSITORY_ID,
+          category: process.env.NEXT_PUBLIC_GISCUS_CATEGORY,
+          categoryId: process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID,
+          mapping: 'pathname', // pathname, url, title
+          reactions: '1', // 1 = enable, 0 = disable
+          metadata: '0',
+          theme: 'light',
+          darkTheme: 'transparent_dark',
+          themeURL: '',
+          lang: 'en',
+        },
+      },
+    }
+    ```
+
+    <Note>
+      **Mapping Options:**
+      - `pathname` - Maps to the page's pathname (recommended)
+      - `url` - Maps to the full URL
+      - `title` - Maps to the page title
+    </Note>
+  </Step>
+</Steps>
+
+### Alternative Comment Providers
+
+<Accordion title="Utterances">
+  Utterances uses GitHub Issues for comments:
+
+  ```javascript data/siteMetadata.js
+  const siteMetadata = {
+    comments: {
+      provider: 'utterances',
+      utterancesConfig: {
+        repo: 'username/repo-name',
+        issueTerm: 'pathname',
+        label: 'comment',
+        theme: 'github-light',
+        darkTheme: 'github-dark',
+      },
+    },
+  }
+  ```
+</Accordion>
+
+<Accordion title="Disqus">
+  Traditional comment system:
+
+  ```javascript data/siteMetadata.js
+  const siteMetadata = {
+    comments: {
+      provider: 'disqus',
+      disqusConfig: {
+        shortname: 'your-disqus-shortname',
+      },
+    },
+  }
+  ```
+</Accordion>
+
+## Search Configuration
+
+The portfolio uses kbar for command palette-style search.
+
+```javascript data/siteMetadata.js
+const siteMetadata = {
+  search: {
+    provider: 'kbar',
+    kbarConfig: {
+      searchDocumentsPath: 'search.json',
+    },
+  },
+}
+```
+
+<Note>
+  The search index is automatically generated at build time from your blog posts and stored in `public/search.json`. You don't need to manually maintain this file.
+</Note>
+
+### Using Algolia Search
+
+For larger sites, you can use Algolia for more powerful search:
+
+<Steps>
+  <Step title="Create Algolia Account">
+    Sign up at [Algolia](https://www.algolia.com/)
+  </Step>
+
+  <Step title="Get API Credentials">
+    Get your Application ID, Search API Key, and Index Name from the Algolia dashboard
+  </Step>
+
+  <Step title="Configure Algolia">
+    ```javascript data/siteMetadata.js
+    const siteMetadata = {
+      search: {
+        provider: 'algolia',
+        algoliaConfig: {
+          appId: 'R2IYF7ETH7',
+          apiKey: '599cec31baffa4868cae4e79f180729b',
+          indexName: 'docsearch',
+        },
+      },
+    }
+    ```
+  </Step>
+</Steps>
+
+## Complete Configuration Example
+
+```javascript data/siteMetadata.js
+const siteMetadata = {
+  // Basic Info
+  title: 'Tech Blog',
+  author: 'Your Name',
+  headerTitle: 'Your Blog',
+  description: 'A blog about technology and development',
+  language: 'en-us',
+  theme: 'system',
+  siteUrl: 'https://yourdomain.com',
+  siteRepo: 'https://github.com/username/repo',
+  siteLogo: '/static/images/logo.jpg',
+  socialBanner: '/static/images/banner.jpg',
+  locale: 'en-US',
+
+  // Social Links
+  email: 'your@email.com',
+  github: 'https://github.com/username',
+  twitter: 'https://twitter.com/username',
+  linkedin: 'https://linkedin.com/in/username',
+
+  // Analytics
+  analytics: {
+    umamiAnalytics: {
+      umamiWebsiteId: process.env.NEXT_UMAMI_ID,
+    },
+  },
+
+  // Newsletter
+  newsletter: {
+    provider: 'buttondown',
+  },
+
+  // Comments
+  comments: {
+    provider: 'giscus',
+    giscusConfig: {
+      repo: process.env.NEXT_PUBLIC_GISCUS_REPO,
+      repositoryId: process.env.NEXT_PUBLIC_GISCUS_REPOSITORY_ID,
+      category: process.env.NEXT_PUBLIC_GISCUS_CATEGORY,
+      categoryId: process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID,
+      mapping: 'pathname',
+      reactions: '1',
+      metadata: '0',
+      theme: 'light',
+      darkTheme: 'transparent_dark',
+      lang: 'en',
+    },
+  },
+
+  // Search
+  search: {
+    provider: 'kbar',
+    kbarConfig: {
+      searchDocumentsPath: 'search.json',
+    },
+  },
+}
+
+module.exports = siteMetadata
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Styling" icon="palette" href="/customization/styling">
+    Customize colors, fonts, and CSS
+  </Card>
+  <Card title="Content Management" icon="file-lines" href="/customization/content-management">
+    Create blog posts and author profiles
+  </Card>
+</CardGroup>

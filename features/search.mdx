@@ -1,0 +1,345 @@
+---
+title: 'Search Functionality'
+description: 'Learn how the kbar-powered search system works'
+icon: 'magnifying-glass'
+---
+
+## Overview
+
+The portfolio implements a command palette-style search using **kbar**, allowing users to quickly search through blog posts with keyboard shortcuts.
+
+<Info>
+kbar provides a fast, accessible command palette with keyboard navigation, fuzzy search, and customizable actions.
+</Info>
+
+## Search Configuration
+
+Search is configured in `data/siteMetadata.js`:
+
+```javascript data/siteMetadata.js
+const siteMetadata = {
+  // ...
+  search: {
+    provider: 'kbar', // kbar or algolia
+    kbarConfig: {
+      searchDocumentsPath: 'search.json', // path to load documents to search
+    },
+  },
+}
+
+module.exports = siteMetadata
+```
+
+### Available Providers
+
+<CardGroup cols={2}>
+  <Card title="kbar" icon="keyboard">
+    Local search with command palette UI (default)
+  </Card>
+  <Card title="Algolia" icon="algolia">
+    Cloud-based search with advanced features
+  </Card>
+</CardGroup>
+
+## Search Provider Setup
+
+The search provider wraps the application in `app/layout.tsx`:
+
+```typescript app/layout.tsx
+import { SearchProvider, SearchConfig } from 'pliny/search'
+import siteMetadata from '@/data/siteMetadata'
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang={siteMetadata.language}>
+      <body>
+        <ThemeProviders>
+          <SectionContainer>
+            <div className="flex h-screen flex-col justify-between font-sans">
+              <SearchProvider searchConfig={siteMetadata.search as SearchConfig}>
+                <Header />
+                <main className="mb-auto">{children}</main>
+              </SearchProvider>
+              <Footer />
+            </div>
+          </SectionContainer>
+        </ThemeProviders>
+      </body>
+    </html>
+  )
+}
+```
+
+<Note>
+The `SearchProvider` must wrap all components that need access to search functionality.
+</Note>
+
+## Search Button Component
+
+The search button is implemented in `components/SearchButton.tsx`:
+
+```typescript components/SearchButton.tsx
+import { AlgoliaButton } from 'pliny/search/AlgoliaButton'
+import { KBarButton } from 'pliny/search/KBarButton'
+import siteMetadata from '@/data/siteMetadata'
+
+const SearchButton = () => {
+  if (
+    siteMetadata.search &&
+    (siteMetadata.search.provider === 'algolia' || siteMetadata.search.provider === 'kbar')
+  ) {
+    const SearchButtonWrapper =
+      siteMetadata.search.provider === 'algolia' ? AlgoliaButton : KBarButton
+
+    return (
+      <SearchButtonWrapper aria-label="Search">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1.5}
+          stroke="currentColor"
+          className="h-6 w-6 text-gray-900 dark:text-gray-100"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+          />
+        </svg>
+      </SearchButtonWrapper>
+    )
+  }
+}
+
+export default SearchButton
+```
+
+### How It Works
+
+<Steps>
+  <Step title="Provider Check">
+    Verifies that search is configured and uses a supported provider
+  </Step>
+  
+  <Step title="Button Selection">
+    Dynamically selects the appropriate button component (KBarButton or AlgoliaButton)
+  </Step>
+  
+  <Step title="Icon Display">
+    Renders a magnifying glass icon that adapts to the current theme
+  </Step>
+</Steps>
+
+## Search Index Generation
+
+The search index is automatically generated during the build process in `contentlayer.config.ts`:
+
+```typescript contentlayer.config.ts
+import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer.js'
+
+function createSearchIndex(allBlogs) {
+  if (
+    siteMetadata?.search?.provider === 'kbar' &&
+    siteMetadata.search.kbarConfig.searchDocumentsPath
+  ) {
+    writeFileSync(
+      `public/${siteMetadata.search.kbarConfig.searchDocumentsPath}`,
+      JSON.stringify(allCoreContent(sortPosts(allBlogs)))
+    )
+    console.log('Local search index generated...')
+  }
+}
+
+export default makeSource({
+  contentDirPath: 'data',
+  documentTypes: [Blog, Authors],
+  // ...
+  onSuccess: async (importData) => {
+    const { allBlogs } = await importData()
+    createTagCount(allBlogs)
+    createSearchIndex(allBlogs)  // Generate search index
+  },
+})
+```
+
+### Generated Search Index
+
+The function creates a `public/search.json` file containing:
+
+```json
+[
+  {
+    "title": "Meet Kafka",
+    "date": "2024-03-02",
+    "tags": ["kafka", "book", "DevOps", "data"],
+    "summary": "Apache Kafka is a distributed event store...",
+    "slug": "meet-kafka",
+    "path": "blog/meet-kafka"
+  },
+  {
+    "title": "Understanding React",
+    "date": "2024-02-15",
+    "tags": ["react", "javascript"],
+    "summary": "A deep dive into React fundamentals...",
+    "slug": "understanding-react",
+    "path": "blog/understanding-react"
+  }
+]
+```
+
+<Warning>
+The search index is regenerated every time you build the project. Make sure to rebuild after adding new blog posts.
+</Warning>
+
+## Keyboard Shortcuts
+
+kbar provides several keyboard shortcuts for navigation:
+
+### Primary Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Cmd+K` (Mac) / `Ctrl+K` (Windows) | Open search palette |
+| `Esc` | Close search palette |
+| `↑` / `↓` | Navigate results |
+| `Enter` | Select result |
+
+### Navigation
+
+- **Arrow Keys**: Navigate through search results
+- **Tab**: Cycle through results forward
+- **Shift+Tab**: Cycle through results backward
+- **Enter**: Navigate to selected blog post
+- **Escape**: Close the search palette
+
+<Info>
+The search palette can also be opened by clicking the search button in the header.
+</Info>
+
+## Search Features
+
+### Fuzzy Search
+
+kbar implements fuzzy search, meaning you don't need exact matches:
+
+- Searching "kfka" will find "Kafka"
+- Searching "rect" will find "React"
+- Partial words and typos are handled gracefully
+
+### Searchable Fields
+
+The search indexes the following fields from blog posts:
+
+1. **Title**: The blog post title
+2. **Summary**: The post summary/description
+3. **Tags**: All associated tags
+4. **Slug**: The URL slug
+
+<Note>
+The actual blog post content is not indexed to keep the search index lightweight. Only frontmatter fields are searchable.
+</Note>
+
+## Switching to Algolia
+
+To use Algolia instead of kbar:
+
+<Steps>
+  <Step title="Update Configuration">
+    ```javascript data/siteMetadata.js
+    search: {
+      provider: 'algolia',
+      algoliaConfig: {
+        appId: 'YOUR_APP_ID',
+        apiKey: 'YOUR_API_KEY',
+        indexName: 'YOUR_INDEX_NAME',
+      },
+    }
+    ```
+  </Step>
+  
+  <Step title="Add Environment Variables">
+    ```bash .env.local
+    NEXT_PUBLIC_ALGOLIA_APP_ID=your_app_id
+    NEXT_PUBLIC_ALGOLIA_API_KEY=your_search_api_key
+    NEXT_PUBLIC_ALGOLIA_INDEX_NAME=blog_posts
+    ```
+  </Step>
+  
+  <Step title="Upload Search Index">
+    Use Algolia's dashboard or API to upload your blog posts as searchable records
+  </Step>
+  
+  <Step title="Import CSS">
+    The Algolia search CSS is already imported in `app/layout.tsx`:
+    ```typescript
+    import 'pliny/search/algolia.css'
+    ```
+  </Step>
+</Steps>
+
+## Custom Search Actions
+
+You can extend kbar with custom actions beyond blog search:
+
+```typescript
+import { useRegisterActions } from 'kbar'
+
+export function CustomActions() {
+  useRegisterActions([
+    {
+      id: 'home',
+      name: 'Home',
+      shortcut: ['h'],
+      keywords: 'home',
+      section: 'Navigation',
+      perform: () => router.push('/'),
+    },
+    {
+      id: 'about',
+      name: 'About',
+      shortcut: ['a'],
+      keywords: 'about',
+      section: 'Navigation',
+      perform: () => router.push('/about'),
+    },
+  ])
+  
+  return null
+}
+```
+
+## Styling the Search Palette
+
+The search palette inherits theme styles automatically:
+
+```css
+/* Light mode */
+.bg-white text-black
+
+/* Dark mode */
+.dark:bg-gray-950 dark:text-white
+```
+
+The palette adapts to your theme configuration and Tailwind CSS dark mode settings.
+
+## Performance Considerations
+
+<CardGroup cols={2}>
+  <Card title="Small Index Size" icon="feather">
+    Only frontmatter is indexed, keeping the search.json file lightweight
+  </Card>
+  <Card title="Client-Side Search" icon="bolt">
+    Search runs entirely in the browser with no server requests
+  </Card>
+  <Card title="Lazy Loading" icon="clock">
+    Search index is loaded only when needed
+  </Card>
+  <Card title="Sorted Results" icon="arrow-down-1-9">
+    Results are pre-sorted by date for consistent ordering
+  </Card>
+</CardGroup>
+
+<Info>
+For blogs with 100+ posts, consider switching to Algolia for better performance and advanced features like typo tolerance and analytics.
+</Info>
