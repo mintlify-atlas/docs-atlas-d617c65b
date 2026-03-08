@@ -300,6 +300,64 @@ export default function ListLayoutWithTags({
 }
 ```
 
+## ListLayout
+
+Simpler blog listing layout without sidebar tags, featuring inline search and pagination.
+
+**Location**: `layouts/ListLayout.tsx`
+
+### Interface
+
+```tsx
+interface ListLayoutProps {
+  posts: CoreContent<Blog>[]
+  title: string
+  initialDisplayPosts?: CoreContent<Blog>[]
+  pagination?: PaginationProps
+}
+
+interface PaginationProps {
+  totalPages: number
+  currentPage: number
+}
+```
+
+### Features
+
+- **Inline Search**: Built-in search input to filter posts by title, summary, or tags
+- **Clean Layout**: Simple grid layout without sidebar
+- **Pagination**: Next/Previous navigation for large post collections
+- **Responsive Design**: Adapts to different screen sizes
+
+### Usage
+
+```tsx
+import ListLayout from '@/layouts/ListLayout'
+import { allCoreContent, sortPosts } from 'pliny/utils/contentlayer'
+import { allBlogs } from 'contentlayer/generated'
+
+const posts = allCoreContent(sortPosts(allBlogs))
+
+export default function BlogPage() {
+  return (
+    <ListLayout 
+      posts={posts}
+      title="All Posts"
+      pagination={{ currentPage: 1, totalPages: 5 }}
+    />
+  )
+}
+```
+
+### Key Implementation Details
+
+The layout includes:
+- Client-side search filtering across post title, summary, and tags
+- Conditional display based on search state
+- Pagination component with prev/next navigation
+- Date formatting using site metadata locale
+- Tag display for each post
+
 ## AuthorLayout
 
 Layout for author profile pages.
